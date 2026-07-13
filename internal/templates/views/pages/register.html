@@ -1,0 +1,12 @@
+{{define "body"}}
+<div class="auth-card">
+  <h1>Create account</h1>
+  {{if .Error}}<div class="alert">{{.Error}}</div>{{end}}
+  <form method="post" action="/auth/register">
+    <input name="email" type="email" required placeholder="email">
+    <input name="password" type="password" required minlength="8" placeholder="password (8+ chars)">
+    <button class="btn-primary" type="submit" style="margin-top:0.5rem">Create</button>
+  </form>
+  <p class="auth-card__footer">Already have an account? <a href="/auth/login">Sign in</a></p>
+</div>
+{{end}}

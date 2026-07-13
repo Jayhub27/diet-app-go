@@ -1,0 +1,66 @@
+{{define "body"}}
+<section>
+  <h1>Profile</h1>
+
+  {{if .User}}
+  <div class="card" style="margin-bottom:1.5rem">
+    <p style="margin:0.25rem 0"><strong>Email:</strong> {{if .User.IsAnonymous}}anonymous{{else}}{{.User.Email}}{{end}}</p>
+    <p style="margin:0.25rem 0"><strong>Tier:</strong> {{.User.SubscriptionTier}}</p>
+  </div>
+  {{end}}
+
+  <h2>Restrictions</h2>
+  <form hx-post="/restrictions" hx-target="#restrictions-list" hx-swap="beforeend" class="inline-form">
+    <input name="restriction" required placeholder="e.g. gluten-free">
+    <select name="severity">
+      <option value="avoid">avoid</option>
+      <option value="intolerance">intolerance</option>
+      <option value="anaphylaxis">anaphylaxis</option>
+    </select>
+    <button type="submit">Add</button>
+  </form>
+  <ul id="restrictions-list" class="list">
+    {{range .Restrictions}}
+      <li class="list-item">
+        <span>{{.Restriction}} <span class="list-item__meta">({{.Severity}})</span></span>
+        <button class="btn-ghost" hx-delete="/restrictions/{{.ID}}" hx-target="closest li" hx-swap="outerHTML">remove</button>
+      </li>
+    {{else}}
+      <li class="list-item list-item--empty">No restrictions set.</li>
+    {{end}}
+  </ul>
+
+  <h2>Blacklist</h2>
+  <form hx-post="/blacklist" hx-target="#blacklist-list" hx-swap="beforeend" class="inline-form">
+    <input name="ingredient" required placeholder="e.g. cilantro">
+    <button type="submit">Add</button>
+  </form>
+  <ul id="blacklist-list" class="list">
+    {{range .Blacklist}}
+      <li class="list-item">
+        <span>{{.Ingredient}}</span>
+        <button class="btn-ghost" hx-delete="/blacklist/{{.ID}}" hx-target="closest li" hx-swap="outerHTML">remove</button>
+      </li>
+    {{else}}
+      <li class="list-item list-item--empty">No blacklisted ingredients.</li>
+    {{end}}
+  </ul>
+
+  <h2>AI settings</h2>
+  <form hx-post="/settings" class="card" style="display:flex; flex-direction:column; gap:0.75rem">
+    <label>Source
+      <select name="source">
+        <option value="openrouter" {{if eq .Settings.Source "openrouter"}}selected{{end}}>OpenRouter</option>
+        <option value="openai" {{if eq .Settings.Source "openai"}}selected{{end}}>OpenAI</option>
+        <option value="ollama" {{if eq .Settings.Source "ollama"}}selected{{end}}>Ollama</option>
+        <option value="lmstudio" {{if eq .Settings.Source "lmstudio"}}selected{{end}}>LM Studio</option>
+        <option value="local" {{if eq .Settings.Source "local"}}selected{{end}}>Local (llama.cpp)</option>
+      </select>
+    </label>
+    <label>Model
+      <input name="model_id" value="{{.Settings.ModelID}}">
+    </label>
+    <button class="btn-primary" type="submit" style="align-self:flex-start">Save</button>
+  </form>
+</section>
+{{end}}

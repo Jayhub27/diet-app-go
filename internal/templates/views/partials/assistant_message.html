@@ -1,0 +1,16 @@
+{{define "assistant_message"}}
+<div class="chat-bubble chat-bubble--assistant">
+  <div class="chat-bubble__role">dietapp</div>
+  <div>{{.Content}}</div>
+  {{if .Tools}}
+    <details>
+      <summary>tools used</summary>
+      <ul>
+        {{range .Tools}}
+          <li><code>{{.Name}}</code> → <code>{{.Result}}</code></li>
+        {{end}}
+      </ul>
+    </details>
+  {{end}}
+</div>
+{{end}}

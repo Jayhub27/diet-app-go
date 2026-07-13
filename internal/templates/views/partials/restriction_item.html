@@ -1,0 +1,6 @@
+{{define "restriction_item"}}
+<li class="list-item">
+  <span>{{.Restriction}} <span class="list-item__meta">({{.Severity}})</span></span>
+  <button class="btn-ghost" hx-delete="/restrictions/{{.ID}}" hx-target="closest li" hx-swap="outerHTML">remove</button>
+</li>
+{{end}}

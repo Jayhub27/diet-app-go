@@ -1,0 +1,6 @@
+{{define "blacklist_item"}}
+<li class="list-item">
+  <span>{{.Ingredient}}</span>
+  <button class="btn-ghost" hx-delete="/blacklist/{{.ID}}" hx-target="closest li" hx-swap="outerHTML">remove</button>
+</li>
+{{end}}

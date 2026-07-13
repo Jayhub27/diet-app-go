@@ -1,0 +1,24 @@
+{{define "body"}}
+<section>
+  <h1>Pantry</h1>
+  <form hx-post="/pantry" hx-target="#pantry-list" hx-swap="beforeend" class="inline-form">
+    <input name="name" required placeholder="e.g. chicken breast">
+    <input name="amount" type="number" step="0.1" placeholder="amount" style="max-width:7rem">
+    <input name="unit" placeholder="g" style="max-width:5rem">
+    <button type="submit">Add</button>
+  </form>
+  <ul id="pantry-list" class="list">
+    {{range .Items}}
+      <li class="list-item">
+        <span>
+          {{.Name}}
+          {{if .Amount}}<span class="list-item__meta">{{.Amount}} {{.Unit}}</span>{{end}}
+        </span>
+        <button class="btn-ghost" hx-delete="/pantry/{{.ID}}" hx-target="closest li" hx-swap="outerHTML">remove</button>
+      </li>
+    {{else}}
+      <li class="list-item list-item--empty">Your pantry is empty.</li>
+    {{end}}
+  </ul>
+</section>
+{{end}}

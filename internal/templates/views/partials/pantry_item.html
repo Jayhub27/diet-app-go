@@ -1,0 +1,9 @@
+{{define "pantry_item"}}
+<li class="list-item">
+  <span>
+    {{.Name}}
+    {{if .Amount}}<span class="list-item__meta">{{.Amount}} {{.Unit}}</span>{{end}}
+  </span>
+  <button class="btn-ghost" hx-delete="/pantry/{{.ID}}" hx-target="closest li" hx-swap="outerHTML">remove</button>
+</li>
+{{end}}

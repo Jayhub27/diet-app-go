@@ -1,0 +1,46 @@
+{{define "body"}}
+<section>
+  <h1>Chat with DietApp</h1>
+
+  <div id="chat-log" class="chat-log">
+    {{if .Messages}}
+      {{range .Messages}}
+        {{if eq .Role "user"}}
+          <div class="chat-bubble chat-bubble--user">
+            <div class="chat-bubble__role">you</div>
+            <div>{{.Content}}</div>
+          </div>
+        {{else}}
+          <div class="chat-bubble chat-bubble--assistant">
+            <div class="chat-bubble__role">dietapp</div>
+            <div>{{.Content}}</div>
+          </div>
+        {{end}}
+      {{end}}
+    {{else}}
+      <div class="chat-bubble chat-bubble--assistant">
+        <div class="chat-bubble__role">dietapp</div>
+        <div>Try: "vegan high-protein dinner under 600 calories" or "what can I make with chicken and rice?"</div>
+      </div>
+    {{end}}
+  </div>
+
+  <form
+    hx-post="/chat"
+    hx-target="#chat-log"
+    hx-swap="beforeend"
+    hx-indicator="#chat-spinner"
+    class="chat-form"
+  >
+    <input
+      name="message"
+      autocomplete="off"
+      autofocus
+      placeholder="Ask DietApp…"
+      required
+    >
+    <button class="btn-primary" type="submit">Send</button>
+    <span id="chat-spinner" class="htmx-indicator" aria-hidden="true">⏳</span>
+  </form>
+</section>
+{{end}}

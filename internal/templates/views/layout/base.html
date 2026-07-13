@@ -1,0 +1,36 @@
+{{define "base"}}<!doctype html>
+<html lang="en" class="{{if .DarkMode}}dark{{end}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>{{.Title}} · DietApp</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script>
+    // Theme persistence. Reads localStorage and toggles the .dark class on <html>.
+    (function () {
+      const saved = localStorage.getItem('dietapp-theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (saved === 'dark' || (!saved && prefersDark)) {
+        document.documentElement.classList.add('dark');
+      }
+      window.__toggleTheme = function () {
+        const root = document.documentElement;
+        root.classList.toggle('dark');
+        localStorage.setItem('dietapp-theme', root.classList.contains('dark') ? 'dark' : 'light');
+      };
+    })();
+    // auto-resize textarea (not used yet, but handy for future chat input)
+  </script>
+</head>
+<body>
+  <div class="app-shell">
+    {{template "header" .}}
+    <main class="app-main">
+      {{template "body" .}}
+    </main>
+  </div>
+</body>
+</html>
+{{end}}

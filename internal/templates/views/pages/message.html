@@ -1,0 +1,7 @@
+{{define "body"}}
+<section class="space-y-2">
+  <h1 class="text-2xl font-semibold">{{.Title}}</h1>
+  <p class="text-stone-600 dark:text-stone-400">{{.Message}}</p>
+  {{if .Link}}<a href="{{.Link}}" class="text-emerald-600 underline">{{.LinkText}}</a>{{end}}
+</section>
+{{end}}

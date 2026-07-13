@@ -1,0 +1,31 @@
+{{define "header"}}<header class="app-header">
+  <div class="app-header__inner">
+    <a href="/" class="app-header__brand">
+      <span aria-hidden="true">🥗</span> DietApp
+    </a>
+    <nav class="app-header__nav">
+      <a href="/">Chat</a>
+      <a href="/pantry">Pantry</a>
+      <a href="/library">Library</a>
+      <a href="/profile">Profile</a>
+      {{if .User}}
+        <span class="app-header__user">
+          {{if .User.IsAnonymous}}anonymous{{else}}{{.User.Email}}{{end}}
+        </span>
+        <button class="theme-toggle" type="button" onclick="window.__toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
+          <span aria-hidden="true">◐</span>
+        </button>
+        {{if .User.IsAnonymous}}
+          <a href="/auth/login">Sign in</a>
+        {{else}}
+          <a href="/auth/logout">Sign out</a>
+        {{end}}
+      {{else}}
+        <button class="theme-toggle" type="button" onclick="window.__toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
+          <span aria-hidden="true">◐</span>
+        </button>
+      {{end}}
+    </nav>
+  </div>
+</header>
+{{end}}
