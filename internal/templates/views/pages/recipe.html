@@ -1,0 +1,63 @@
+{{define "body"}}
+<section>
+  <p class="list-item__meta"><a href="/library">← Back to library</a></p>
+  <h1>{{.Recipe.Title}}</h1>
+  {{if .Recipe.Description}}<p class="list-item__meta">{{.Recipe.Description}}</p>{{end}}
+
+  <div class="card" style="display:flex; gap:1.5rem; flex-wrap:wrap; margin:1rem 0">
+    <div><strong>{{.Recipe.Servings}}</strong><span class="list-item__meta"> servings</span></div>
+    <div><strong>{{.Recipe.PrepMinutes}}m</strong><span class="list-item__meta"> prep</span></div>
+    <div><strong>{{.Recipe.CookMinutes}}m</strong><span class="list-item__meta"> cook</span></div>
+    {{with .Recipe.Nutrition.PerServing}}
+    <div><strong>{{.Calories}} kcal</strong><span class="list-item__meta"> / serving</span></div>
+    <div><span class="list-item__meta">P {{.ProteinGrams}}g · C {{.CarbsGrams}}g · F {{.FatGrams}}g</span></div>
+    {{end}}
+  </div>
+
+  {{if .Recipe.DietaryTags}}
+  <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem">
+    {{range .Recipe.DietaryTags}}
+    <span class="list-item__meta" style="border:1px solid var(--border, #ccc); border-radius:999px; padding:0.15rem 0.6rem">{{.}}</span>
+    {{end}}
+  </div>
+  {{end}}
+
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem">
+    <div>
+      <h2>Ingredients</h2>
+      {{if .Recipe.Ingredients}}
+      <ul class="list">
+        {{range .Recipe.Ingredients}}
+        <li class="list-item">
+          <span>{{.Name}}</span>
+          {{if .Amount}}<span class="list-item__meta">{{.Amount}} {{.Unit}}</span>{{end}}
+        </li>
+        {{end}}
+      </ul>
+      {{else}}
+      <div class="list-item list-item--empty">No ingredients recorded.</div>
+      {{end}}
+    </div>
+    <div>
+      <h2>Steps</h2>
+      {{if .Recipe.Steps}}
+      <ol class="list">
+        {{range .Recipe.Steps}}
+        <li class="list-item" style="flex-direction:column; align-items:flex-start">{{.}}</li>
+        {{end}}
+      </ol>
+      {{else}}
+      <div class="list-item list-item--empty">No steps recorded.</div>
+      {{end}}
+    </div>
+  </div>
+
+  <div style="margin-top:1.5rem">
+    <button class="btn btn-danger"
+      hx-delete="/library/{{.Recipe.ID}}"
+      hx-target="body"
+      hx-swap="none"
+      hx-confirm="Delete this recipe?">Delete recipe</button>
+  </div>
+</section>
+{{end}}

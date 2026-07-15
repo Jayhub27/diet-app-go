@@ -3,9 +3,13 @@ package handlers
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/google/uuid"
@@ -15,6 +19,7 @@ import (
 	"github.com/orionryan/diet-app-go/internal/ai/tools"
 	"github.com/orionryan/diet-app-go/internal/auth"
 	"github.com/orionryan/diet-app-go/internal/config"
+	"github.com/orionryan/diet-app-go/internal/localai"
 	"github.com/orionryan/diet-app-go/internal/ratelimit"
 	"github.com/orionryan/diet-app-go/internal/templates"
 )
@@ -25,6 +30,7 @@ type Deps struct {
 	Auth      *auth.Service
 	Limiter   *ratelimit.Limiter
 	Templates *templates.Engine
+	LocalAI   *localai.Manager
 }
 
 type Handlers struct{ Deps }
@@ -53,12 +59,23 @@ func (h *Handlers) Register(e *echo.Echo) {
 	e.POST("/pantry", h.PantryAdd)
 	e.DELETE("/pantry/:id", h.PantryDelete)
 	e.GET("/library", h.Library)
+	e.GET("/library/:id", h.RecipeDetail)
+	e.DELETE("/library/:id", h.RecipeDelete)
 	e.GET("/profile", h.Profile)
 	e.POST("/restrictions", h.RestrictionAdd)
 	e.DELETE("/restrictions/:id", h.RestrictionDelete)
 	e.POST("/blacklist", h.BlacklistAdd)
 	e.DELETE("/blacklist/:id", h.BlacklistDelete)
 	e.POST("/settings", h.SettingsSave)
+
+	// Local AI model management.
+	e.GET("/models", h.ModelsPage)
+	e.POST("/models/download", h.ModelsDownload)
+	e.POST("/models/download/curated", h.ModelsDownloadCurated)
+	e.GET("/models/download/stream", h.ModelsDownloadStream)
+	e.POST("/models/:id/load", h.ModelsLoad)
+	e.POST("/models/:id/unload", h.ModelsUnload)
+	e.DELETE("/models/:id", h.ModelsDelete)
 }
 
 // --- pages ---
@@ -176,17 +193,59 @@ func (h *Handlers) ChatSend(c echo.Context) error {
 	if userText == "" {
 		return c.NoContent(http.StatusBadRequest)
 	}
+
+	// Accept multipart image uploads (vision path). The images are saved to
+	// a temp dir, passed to the vision tool, then removed.
+	var imagePaths []string
+	form, ferr := c.MultipartForm()
+	if ferr == nil && form != nil {
+		files := form.File["images"]
+		if len(files) > 0 {
+			tmpDir, err := os.MkdirTemp("", "dietapp-img-*")
+			if err != nil {
+				return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+			}
+			defer os.RemoveAll(tmpDir)
+			for _, fh := range files {
+				if fh.Size > 25*1024*1024 {
+					continue
+				}
+				src, err := fh.Open()
+				if err != nil {
+					continue
+				}
+				dst, err := os.Create(filepath.Join(tmpDir, filepath.Base(fh.Filename)))
+				if err != nil {
+					src.Close()
+					continue
+				}
+				if _, err := io.Copy(dst, src); err != nil {
+					src.Close()
+					dst.Close()
+					continue
+				}
+				src.Close()
+				dst.Close()
+				imagePaths = append(imagePaths, dst.Name())
+			}
+		}
+	}
+
 	ctx := c.Request().Context()
 	convID, _, err := h.loadOrCreateConversation(ctx, u.ID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	// Persist user message.
+	// Persist user message (mention attached images in transcript).
+	persistedUserText := userText
+	if len(imagePaths) > 0 {
+		persistedUserText = "[attached " + fmtInt(len(imagePaths)) + " image(s)]\n" + userText
+	}
 	userMsgID := uuid.NewString()
 	_, err = h.DB.ExecContext(ctx,
 		`insert into messages (id, conversation_id, user_id, role, content) values (?, ?, ?, 'user', ?)`,
-		userMsgID, convID, u.ID, userText)
+		userMsgID, convID, u.ID, persistedUserText)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -226,6 +285,22 @@ func (h *Handlers) ChatSend(c echo.Context) error {
 	if baseURL == "" {
 		baseURL = h.providerDefaultBaseURL(src)
 	}
+
+	// If using the local source AND the user attached images AND the active
+	// model is vision-capable, bypass the agent's tool loop and call the
+	// manager's vision path directly.
+	if src == provider.SourceLocal && len(imagePaths) > 0 && h.LocalAI != nil && h.LocalAI.IsVision() {
+		reply, vErr := h.runVisionLocal(ctx, userText, imagePaths, pantry, restrictions, blacklist)
+		if vErr != nil {
+			return h.renderChatBubble(c, persistedUserText, "Sorry — the AI call failed: "+vErr.Error(), nil)
+		}
+		h.persistAssistant(ctx, convID, u.ID, reply)
+		return h.renderChatBubble(c, persistedUserText, reply, nil)
+	}
+
+	// Local source with no images: just use the provider.Client path —
+	// the local hook is wired at startup, so source=local transparently
+	// dispatches to the manager.
 	client := provider.New(provider.Options{
 		Source:    src,
 		Model:     model,
@@ -297,17 +372,13 @@ func (h *Handlers) ChatSend(c echo.Context) error {
 			`insert into messages (id, conversation_id, user_id, role, content) values (?, ?, ?, 'assistant', ?)`,
 			uuid.NewString(), convID, u.ID, "Sorry — the AI call failed: "+err.Error())
 		// Render the user message plus an error bubble via HTMX.
-		return h.renderChatBubble(c, userText, "Sorry — the AI call failed: "+err.Error(), nil)
+		return h.renderChatBubble(c, persistedUserText, "Sorry — the AI call failed: "+err.Error(), nil)
 	}
 	reply := res.Reply
 	if reply == "" {
 		reply = "(no reply)"
 	}
-	// Persist assistant reply.
-	_, _ = h.DB.ExecContext(ctx,
-		`insert into messages (id, conversation_id, user_id, role, content) values (?, ?, ?, 'assistant', ?)`,
-		uuid.NewString(), convID, u.ID, reply)
-	_, _ = h.DB.ExecContext(ctx, `update conversations set updated_at = datetime('now') where id = ?`, convID)
+	h.persistAssistant(ctx, convID, u.ID, reply)
 
 	// Optional: record tool hit list for the UI.
 	toolHits := make([]map[string]string, 0)
@@ -317,7 +388,73 @@ func (h *Handlers) ChatSend(c echo.Context) error {
 			"Result": fmt.Sprintf("%d call(s)", count),
 		})
 	}
-	return h.renderChatBubble(c, userText, reply, toolHits)
+	return h.renderChatBubble(c, persistedUserText, reply, toolHits)
+}
+
+// runVisionLocal calls the local manager's vision path with a single
+// user-message + system context. No tool loop.
+func (h *Handlers) runVisionLocal(ctx context.Context, userText string, imagePaths []string,
+	pantry []pantryRow, restrictions []restrictionRow, blacklist []blacklistRow) (string, error) {
+
+	rs := make([]tools.Restriction, 0, len(restrictions))
+	for _, r := range restrictions {
+		rs = append(rs, tools.Restriction{Name: r.Restriction, Severity: tools.Severity(r.Severity)})
+	}
+	pantryView := make([]map[string]any, 0, len(pantry))
+	for _, p := range pantry {
+		pantryView = append(pantryView, map[string]any{"name": p.Name, "amount": p.Amount, "unit": p.Unit})
+	}
+	bl := make([]string, 0, len(blacklist))
+	for _, b := range blacklist {
+		bl = append(bl, b.Ingredient)
+	}
+	sys := ai.SystemPrompt + ai.BuildContextBlock(pantryView, rs, bl)
+
+	msgs := []provider.Message{
+		{Role: "system", Content: sys},
+		{Role: "user", Content: userText},
+	}
+	resp, err := h.LocalAI.ChatVision(ctx, provider.ChatRequest{Messages: msgs}, imagePaths)
+	if err != nil {
+		return "", err
+	}
+	if len(resp.Choices) == 0 {
+		return "(no reply)", nil
+	}
+	return resp.Choices[0].Message.Content, nil
+}
+
+func (h *Handlers) persistAssistant(ctx context.Context, convID, userID, reply string) {
+	_, _ = h.DB.ExecContext(ctx,
+		`insert into messages (id, conversation_id, user_id, role, content) values (?, ?, ?, 'assistant', ?)`,
+		uuid.NewString(), convID, userID, reply)
+	_, _ = h.DB.ExecContext(ctx, `update conversations set updated_at = datetime('now') where id = ?`, convID)
+}
+
+func fmtInt(n int) string {
+	return strconvItoa(n)
+}
+
+func strconvItoa(n int) string {
+	if n == 0 {
+		return "0"
+	}
+	neg := n < 0
+	if neg {
+		n = -n
+	}
+	var b [20]byte
+	i := len(b)
+	for n > 0 {
+		i--
+		b[i] = byte('0' + n%10)
+		n /= 10
+	}
+	if neg {
+		i--
+		b[i] = '-'
+	}
+	return string(b[i:])
 }
 
 func (h *Handlers) renderChatBubble(c echo.Context, userText, reply string, toolHits []map[string]string) error {
@@ -457,6 +594,66 @@ func (h *Handlers) loadRecipes(ctx context.Context, userID string) ([]recipeRow,
 type recipeRow struct {
 	ID, Title, Description             string
 	Servings, PrepMinutes, CookMinutes int
+}
+
+// fullRecipe is the complete recipe loaded for the detail page. JSON columns
+// are unmarshalled into typed slices/maps so the template can render them.
+type fullRecipe struct {
+	ID           string
+	Title        string
+	Description  string
+	Servings     int
+	PrepMinutes  int
+	CookMinutes  int
+	Ingredients  []ingredientView
+	Steps        []string
+	DietaryTags  []string
+	Nutrition    nutritionView
+	SourcePrompt string
+}
+
+type ingredientView struct {
+	Name   string  `json:"name"`
+	Amount float64 `json:"amount"`
+	Unit   string  `json:"unit"`
+}
+
+type nutritionView struct {
+	PerServing macroView `json:"perServing"`
+	Total      macroView `json:"total"`
+}
+
+type macroView struct {
+	Calories     float64 `json:"calories"`
+	ProteinGrams float64 `json:"proteinGrams"`
+	CarbsGrams   float64 `json:"carbsGrams"`
+	FatGrams     float64 `json:"fatGrams"`
+}
+
+// loadRecipe fetches a single recipe owned by the user, including all JSON
+// columns (ingredients, steps, tags, nutrition). Returns nil if not found.
+func (h *Handlers) loadRecipe(ctx context.Context, userID, id string) (*fullRecipe, error) {
+	var r fullRecipe
+	var ingredientsJSON, stepsJSON, tagsJSON, nutritionJSON, sourcePrompt sql.NullString
+	err := h.DB.QueryRowContext(ctx,
+		`select id, title, coalesce(description, ''), servings, prep_minutes, cook_minutes,
+		        ingredients_json, steps_json, dietary_tags_json, nutrition_json, coalesce(source_prompt, '')
+		 from recipes where id = ? and user_id = ?`,
+		id, userID,
+	).Scan(&r.ID, &r.Title, &r.Description, &r.Servings, &r.PrepMinutes, &r.CookMinutes,
+		&ingredientsJSON, &stepsJSON, &tagsJSON, &nutritionJSON, &sourcePrompt)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	r.SourcePrompt = sourcePrompt.String
+	_ = json.Unmarshal([]byte(ingredientsJSON.String), &r.Ingredients)
+	_ = json.Unmarshal([]byte(stepsJSON.String), &r.Steps)
+	_ = json.Unmarshal([]byte(tagsJSON.String), &r.DietaryTags)
+	_ = json.Unmarshal([]byte(nutritionJSON.String), &r.Nutrition)
+	return &r, nil
 }
 
 func (h *Handlers) recentMessages(ctx context.Context, convID string, n int) ([]chatMessage, error) {

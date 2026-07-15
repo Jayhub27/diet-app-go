@@ -1,14 +1,17 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/orionryan/diet-app-go/internal/ai/provider"
 	"github.com/orionryan/diet-app-go/internal/auth"
 	"github.com/orionryan/diet-app-go/internal/config"
 	"github.com/orionryan/diet-app-go/internal/db"
 	"github.com/orionryan/diet-app-go/internal/handlers"
+	"github.com/orionryan/diet-app-go/internal/localai"
 	"github.com/orionryan/diet-app-go/internal/ratelimit"
 	"github.com/orionryan/diet-app-go/internal/templates"
 )
@@ -30,6 +33,14 @@ func main() {
 		log.Fatalf("templates: %v", err)
 	}
 
+	aiMgr, err := localai.NewManager(d, "")
+	if err != nil {
+		log.Fatalf("localai: %v", err)
+	}
+	provider.SetLocalChatFunc(func(ctx context.Context, req provider.ChatRequest) (*provider.ChatResponse, error) {
+		return aiMgr.Chat(ctx, req)
+	})
+
 	authSvc := auth.NewService(d, cfg.SessionSecret, cfg.AllowAnonymous)
 	limiter := ratelimit.New(20, 60_000) // 20 chat messages per minute per user
 
@@ -39,6 +50,7 @@ func main() {
 		Auth:      authSvc,
 		Limiter:   limiter,
 		Templates: tmpl,
+		LocalAI:   aiMgr,
 	}
 	h := handlers.New(deps)
 
@@ -51,7 +63,7 @@ func main() {
 	h.Register(e)
 
 	addr := ":" + itoa(cfg.Port)
-	log.Printf("DietApp listening on %s (db=%s, anon=%v)", addr, cfg.DatabasePath, cfg.AllowAnonymous)
+	log.Printf("DietApp listening on %s (db=%s, anon=%v, models=%s)", addr, cfg.DatabasePath, cfg.AllowAnonymous, aiMgr.ModelsDir())
 	if err := e.Start(addr); err != nil {
 		log.Fatal(err)
 	}

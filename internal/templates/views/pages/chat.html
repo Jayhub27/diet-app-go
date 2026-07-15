@@ -31,6 +31,7 @@
     hx-swap="beforeend"
     hx-indicator="#chat-spinner"
     class="chat-form"
+    enctype="multipart/form-data"
   >
     <input
       name="message"
@@ -38,6 +39,14 @@
       autofocus
       placeholder="Ask DietApp…"
       required
+    >
+    <input
+      type="file"
+      name="images"
+      accept="image/*"
+      multiple
+      style="max-width:14rem"
+      title="Attach images (vision models only)"
     >
     <button class="btn-primary" type="submit">Send</button>
     <span id="chat-spinner" class="htmx-indicator" aria-hidden="true">⏳</span>

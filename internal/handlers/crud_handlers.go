@@ -76,6 +76,34 @@ func (h *Handlers) Library(c echo.Context) error {
 	return h.page(c, "library", map[string]any{"Recipes": recipes})
 }
 
+// RecipeDetail renders a single saved recipe (ingredients, steps, nutrition).
+func (h *Handlers) RecipeDetail(c echo.Context) error {
+	u := auth.CurrentUser(c)
+	r, err := h.loadRecipe(c.Request().Context(), u.ID, c.Param("id"))
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	if r == nil {
+		return c.String(http.StatusNotFound, "Recipe not found")
+	}
+	return h.page(c, "recipe", map[string]any{"Recipe": r})
+}
+
+// RecipeDelete removes a recipe. HTMX requests get a 200 so the row can be
+// swapped out; full-page navigation is redirected back to the library.
+func (h *Handlers) RecipeDelete(c echo.Context) error {
+	u := auth.CurrentUser(c)
+	_, err := h.DB.ExecContext(c.Request().Context(),
+		`delete from recipes where id = ? and user_id = ?`, c.Param("id"), u.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	if isHTMX(c) {
+		return c.NoContent(http.StatusOK)
+	}
+	return c.Redirect(http.StatusSeeOther, "/library")
+}
+
 // --- Profile (restrictions, blacklist, settings) ---
 
 func (h *Handlers) Profile(c echo.Context) error {

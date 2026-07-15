@@ -1,0 +1,101 @@
+{{define "body"}}
+<section>
+  <h1>Local AI models</h1>
+
+  <div class="card" style="margin-bottom:1rem">
+    <p style="margin:0.25rem 0">
+      <strong>Active model:</strong>
+      {{if .ActiveEntry}}
+        {{.ActiveEntry.Name}} <span class="list-item__meta">({{if .ActiveEntry.IsVision}}vision{{else}}text{{end}})</span>
+      {{else}}
+        <em>none loaded</em>
+      {{end}}
+    </p>
+    <p class="list-item__meta" style="margin:0.25rem 0">Models stored in: <code>{{.ModelsDir}}</code></p>
+  </div>
+
+  <h2>Downloaded</h2>
+  <ul id="models-list" class="list">
+    {{range .Models}}
+      <li class="list-item" style="flex-direction:column; align-items:flex-start; gap:0.25rem">
+        <div>
+          <strong>{{.Name}}</strong>
+          {{if .IsVision}}<span class="list-item__meta" style="border:1px solid var(--border, #ccc); border-radius:999px; padding:0.05rem 0.4rem">vision</span>{{end}}
+        </div>
+        <span class="list-item__meta">{{.ModelPath}}{{if .MmprojPath}} + {{.MmprojPath}}{{end}}</span>
+        <span class="list-item__actions">
+          {{if eq .ID $.ActiveID}}
+            <button class="btn-ghost" hx-post="/models/{{.ID}}/unload" hx-swap="none">Unload</button>
+          {{else}}
+            <button class="btn-ghost" hx-post="/models/{{.ID}}/load" hx-swap="none" hx-on::after-request="setTimeout(()=>location.reload(),200)">Load</button>
+            <button class="btn-ghost" hx-delete="/models/{{.ID}}" hx-target="closest li" hx-swap="outerHTML" hx-confirm="Delete this model from disk?">Delete</button>
+          {{end}}
+        </span>
+      </li>
+    {{else}}
+      <li class="list-item list-item--empty">No models downloaded yet. Pick one from the suggestions below.</li>
+    {{end}}
+  </ul>
+
+  <h2>Downloads</h2>
+  <div id="downloads" hx-ext="sse" sse-connect="/models/download/stream" sse-swap="progress" hx-swap="beforeend"
+       style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1.5rem">
+    {{range .Jobs}}
+      <div class="list-item" data-job="{{.ID}}">
+        <span>{{.Filename}} <span class="list-item__meta">{{.State}}</span></span>
+        <span class="list-item__meta">
+          {{if gt .TotalBytes 0}}{{.Done}} / {{.TotalBytes}} bytes{{else}}{{.Done}} bytes{{end}}
+        </span>
+      </div>
+    {{end}}
+  </div>
+
+  <h2>Curated suggestions</h2>
+  <ul class="list">
+    {{range .Curated}}
+      <li class="list-item" style="flex-direction:column; align-items:flex-start; gap:0.25rem">
+        <strong>{{.Name}}</strong>
+        <span class="list-item__meta">{{.Note}}</span>
+        <button class="btn-ghost" hx-post="/models/download/curated" hx-vals='{"name": "{{.Name}}"}' hx-swap="none">Download</button>
+      </li>
+    {{end}}
+  </ul>
+
+  <h2>Custom URL</h2>
+  <form hx-post="/models/download" hx-swap="none" class="inline-form">
+    <input name="name" required placeholder="display name">
+    <input name="url" required placeholder="https://huggingface.co/.../model.gguf" style="flex:1; min-width:18rem">
+    <button type="submit">Download</button>
+  </form>
+  <p class="list-item__meta">For vision models, also add a second download with the matching <code>mmproj-*.gguf</code> file. After both finish, edit the catalog row's <code>mmproj_path</code> or use the manager's API.</p>
+</section>
+
+<script>
+  // Lightweight SSE poller for download progress.
+  (function () {
+    if (window.__modelsSSE) return;
+    window.__modelsSSE = true;
+    const el = document.getElementById('downloads');
+    if (!el) return;
+    const es = new EventSource('/models/download/stream');
+    es.addEventListener('progress', (e) => {
+      try {
+        const p = JSON.parse(e.data);
+        // Find or create the row.
+        let row = el.querySelector('[data-job="' + p.id + '"]');
+        if (!row) {
+          row = document.createElement('div');
+          row.className = 'list-item';
+          row.setAttribute('data-job', p.id);
+          el.appendChild(row);
+        }
+        row.innerHTML = '<span>' + p.name + ' <span class="list-item__meta">' + p.state + '</span></span>'
+          + '<span class="list-item__meta">' + p.pct.toFixed(1) + '% (' + p.done + ' / ' + p.total + ' bytes)</span>';
+        if (p.state === 'complete' || p.state === 'error') {
+          row.style.opacity = '0.6';
+        }
+      } catch (_) {}
+    });
+  })();
+</script>
+{{end}}

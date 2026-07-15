@@ -22,6 +22,7 @@ type Config struct {
 	LMStudioBaseURL   string
 	LocalModelPath    string
 	YZMALibPath       string
+	LocalModelsDir    string
 	AllowAnonymous    bool
 }
 
@@ -53,6 +54,7 @@ func Load() *Config {
 		LMStudioBaseURL:   getenv("LMSTUDIO_BASE_URL", "http://localhost:1234/v1"),
 		LocalModelPath:    os.Getenv("LOCAL_MODEL_PATH"),
 		YZMALibPath:       os.Getenv("YZMA_LIB"),
+		LocalModelsDir:    os.Getenv("LOCAL_MODELS_DIR"),
 		AllowAnonymous:    allowAnon,
 	}
 }

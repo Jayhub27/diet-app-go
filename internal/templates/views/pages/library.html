@@ -5,9 +5,13 @@
     <ul class="list">
       {{range .Recipes}}
         <li class="list-item" style="flex-direction:column; align-items:flex-start; gap:0.25rem">
-          <strong>{{.Title}}</strong>
+          <a href="/library/{{.ID}}"><strong>{{.Title}}</strong></a>
           {{if .Description}}<span class="list-item__meta">{{.Description}}</span>{{end}}
           <span class="list-item__meta">{{.Servings}} servings · {{.PrepMinutes}}m prep · {{.CookMinutes}}m cook</span>
+          <span class="list-item__actions">
+            <a class="btn-ghost" href="/library/{{.ID}}">View</a>
+            <button class="btn-ghost" hx-delete="/library/{{.ID}}" hx-target="closest li" hx-swap="outerHTML" hx-confirm="Delete this recipe?">Delete</button>
+          </span>
         </li>
       {{end}}
     </ul>
