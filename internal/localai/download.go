@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
-	"sync"
+	"strings"
 	"sync/atomic"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/hashicorp/go-getter"
-	"github.com/hybridgroup/yzma/pkg/download"
 )
 
 // DownloadJob is one in-progress or completed download.
@@ -27,39 +26,6 @@ type DownloadJob struct {
 	Done       int64
 	State      string // "queued", "downloading", "complete", "error"
 	Error      string
-}
-
-// ProgressTracker implements getter.ProgressTracker to record byte progress
-// into a DownloadJob.
-type ProgressTracker struct {
-	job    *DownloadJob
-	mu     sync.Mutex
-	closed bool
-}
-
-func (p *ProgressTracker) TrackProgress(src string, currentSize, totalSize int64, stream io.ReadCloser) io.ReadCloser {
-	if totalSize > 0 {
-		atomic.StoreInt64(&p.job.TotalBytes, totalSize)
-	}
-	atomic.StoreInt64(&p.job.Done, currentSize)
-	return &progressReadCloser{rc: stream, job: p.job}
-}
-
-type progressReadCloser struct {
-	rc  io.ReadCloser
-	job *DownloadJob
-}
-
-func (r *progressReadCloser) Read(p []byte) (int, error) {
-	n, err := r.rc.Read(p)
-	if n > 0 {
-		atomic.AddInt64(&r.job.Done, int64(n))
-	}
-	return n, err
-}
-
-func (r *progressReadCloser) Close() error {
-	return r.rc.Close()
 }
 
 // DefaultModelsDir returns the directory where downloaded GGUF files live.
@@ -129,9 +95,19 @@ func (m *Manager) runDownload(job *DownloadJob) {
 		return
 	}
 
+	// HuggingFace blob/resolve URLs serve an HTML page unless ?download=true
+	// is appended; other hosts ignore the extra query param fine.
+	dlURL := job.URL
+	if strings.Contains(dlURL, "huggingface.co/") {
+		if strings.Contains(dlURL, "?") {
+			dlURL += "&download=true"
+		} else {
+			dlURL += "?download=true"
+		}
+	}
+
 	job.State = "downloading"
-	tracker := &ProgressTracker{job: job}
-	if err := download.GetModelWithContext(context.Background(), job.URL, dest, tracker); err != nil {
+	if err := httpDownload(context.Background(), dlURL, dest, job); err != nil {
 		job.State = "error"
 		job.Error = err.Error()
 		return
@@ -140,6 +116,71 @@ func (m *Manager) runDownload(job *DownloadJob) {
 	job.State = "complete"
 	job.Done = job.TotalBytes
 	log.Printf("localai: downloaded %s -> %s", filename, dest)
+}
+
+// httpDownload fetches url into dest with byte-level progress tracking on job.
+// It follows redirects and streams to a temp file, renaming on success.
+func httpDownload(ctx context.Context, url, dest string, job *DownloadJob) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return fmt.Errorf("build request: %w", err)
+	}
+	req.Header.Set("User-Agent", "diet-app-go")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("http get: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("http status %d for %s", resp.StatusCode, url)
+	}
+
+	if resp.ContentLength > 0 {
+		atomic.StoreInt64(&job.TotalBytes, resp.ContentLength)
+	}
+
+	tmp := dest + ".part"
+	f, err := os.Create(tmp)
+	if err != nil {
+		return fmt.Errorf("create file: %w", err)
+	}
+
+	pr := &progressReadCloser{rc: resp.Body, job: job}
+	_, err = io.Copy(f, pr)
+	closeErr := f.Close()
+	if err != nil {
+		os.Remove(tmp)
+		return fmt.Errorf("write body: %w", err)
+	}
+	if closeErr != nil {
+		os.Remove(tmp)
+		return fmt.Errorf("close file: %w", closeErr)
+	}
+
+	if err := os.Rename(tmp, dest); err != nil {
+		os.Remove(tmp)
+		return fmt.Errorf("rename: %w", err)
+	}
+	return nil
+}
+
+type progressReadCloser struct {
+	rc  io.ReadCloser
+	job *DownloadJob
+}
+
+func (r *progressReadCloser) Read(p []byte) (int, error) {
+	n, err := r.rc.Read(p)
+	if n > 0 {
+		atomic.AddInt64(&r.job.Done, int64(n))
+	}
+	return n, err
+}
+
+func (r *progressReadCloser) Close() error {
+	return r.rc.Close()
 }
 
 // JobStatus returns a snapshot of a download job.
@@ -189,8 +230,3 @@ func filenameFromURL(u string) string {
 	}
 	return u[idx+1:]
 }
-
-// DownloadJob is a getter.ProgressTracker-compatible wrapper around
-// download.GetModelWithProgress. Exposed so callers can swap their own
-// progress sink if needed.
-var _ getter.ProgressTracker = (*ProgressTracker)(nil)

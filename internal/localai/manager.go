@@ -11,7 +11,6 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/hybridgroup/yzma/pkg/download"
 	"github.com/hybridgroup/yzma/pkg/llama"
 	"github.com/hybridgroup/yzma/pkg/mtmd"
 )
@@ -266,10 +265,10 @@ func (m *Manager) SetActive(entryID string) error {
 }
 
 // ensureLibs replicates the lib-loading logic from the previous local.go
-// using download.AlreadyInstalled + download.Get.
+// using libsAlreadyInstalled + downloadLibs (plain HTTP, no go-getter).
 func ensureLibs() (string, error) {
 	if libPath := os.Getenv("YZMA_LIB"); libPath != "" {
-		if download.AlreadyInstalled(libPath) {
+		if libsAlreadyInstalled(libPath) {
 			return libPath, nil
 		}
 	}
@@ -280,7 +279,7 @@ func ensureLibs() (string, error) {
 		"./llama-libs",
 	}
 	for _, c := range candidates {
-		if download.AlreadyInstalled(c) {
+		if libsAlreadyInstalled(c) {
 			return c, nil
 		}
 	}
@@ -289,16 +288,16 @@ func ensureLibs() (string, error) {
 		return "", fmt.Errorf("create lib dir: %w", err)
 	}
 	processor := "cpu"
-	if ok, ver := download.HasCUDA(); ok {
+	if ok, ver := hasCUDA(); ok {
 		log.Printf("localai: CUDA detected (version %s), using CUDA build", ver)
 		processor = "cuda"
-	} else if ok, ver := download.HasROCm(); ok {
+	} else if ok, ver := hasROCm(); ok {
 		log.Printf("localai: ROCm detected (version %s), using ROCm build", ver)
 		processor = "rocm"
 	}
 	log.Printf("localai: downloading llama.cpp libraries (arch=%s, os=%s, processor=%s)...",
 		runtime.GOARCH, runtime.GOOS, processor)
-	if err := download.Get(runtime.GOARCH, runtime.GOOS, processor, "latest", dest); err != nil {
+	if err := downloadLibs(runtime.GOARCH, runtime.GOOS, processor, "latest", dest); err != nil {
 		return "", fmt.Errorf("download libs: %w", err)
 	}
 	log.Printf("localai: llama.cpp libraries installed to %s", dest)
