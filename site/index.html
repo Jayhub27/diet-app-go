@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="DietApp — AI-powered nutrition assistant. Chat with your food, manage your pantry, get personalized recipes, and plan meals that respect your dietary restrictions.">
+  <meta name="color-scheme" content="light dark">
+  <title>DietApp — Your AI Nutrition Assistant</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <header class="site-header" id="header">
+    <div class="container header-inner">
+      <a href="/" class="brand">
+        <span class="brand-icon" aria-hidden="true">&#x1F957;</span>
+        <span>DietApp</span>
+      </a>
+      <nav class="nav" id="nav">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#ai">AI Models</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div class="header-actions">
+        <a href="#get-started" class="btn btn-primary">Get started</a>
+        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-inner">
+        <div class="hero-copy">
+          <span class="hero-badge">AI-powered nutrition</span>
+          <h1>Your personal diet assistant, in a single binary.</h1>
+          <p class="hero-sub">
+            Chat with DietApp about what you eat. It remembers your allergies,
+            stocks your pantry, writes recipes, and plans your week &mdash; all
+            while respecting every restriction you have.
+          </p>
+          <div class="hero-cta">
+            <a href="#get-started" class="btn btn-primary btn-lg">Start for free</a>
+            <a href="#features" class="btn btn-ghost btn-lg">See features</a>
+          </div>
+          <div class="hero-stats">
+            <div class="stat"><strong>1</strong><span>SQLite file</span></div>
+            <div class="stat"><strong>0</strong><span>JS build step</span></div>
+            <div class="stat"><strong>4+</strong><span>AI providers</span></div>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <div class="mock-window">
+            <div class="mock-titlebar">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+              <span class="mock-title">dietapp &mdash; chat</span>
+            </div>
+            <div class="mock-body">
+              <div class="mock-msg mock-msg--user">
+                <div class="mock-role">you</div>
+                Vegan high-protein dinner under 600 calories?
+              </div>
+              <div class="mock-msg mock-msg--ai">
+                <div class="mock-role">dietapp</div>
+                How about a <strong>tofu &amp; chickpea curry</strong> with spinach?
+                ~520 kcal, 38g protein. I checked your blacklist &mdash; no
+                conflicts. Want me to save the recipe?
+              </div>
+              <div class="mock-msg mock-msg--user">
+                <div class="mock-role">you</div>
+                Yes, and add the ingredients to my grocery list.
+              </div>
+              <div class="mock-msg mock-msg--ai">
+                <div class="mock-role">dietapp</div>
+                Done. Recipe saved to your library and 7 items added to your grocery list.
+              </div>
+              <div class="mock-composer">
+                <span class="mock-composer-text">Ask DietApp&hellip;</span>
+                <span class="mock-composer-send">&uarr;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="features" id="features">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">Features</span>
+          <h2>Everything you need to eat better.</h2>
+          <p class="section-sub">No subscriptions, no cloud lock-in. One Go binary, one SQLite file, and an AI model of your choice.</p>
+        </div>
+
+        <div class="feature-grid">
+          <article class="feature">
+            <div class="feature-icon">&#x1F4AC;</div>
+            <h3>Conversational AI</h3>
+            <p>Ask questions in plain language. DietApp streams replies token-by-token and calls tools behind the scenes to compute nutrition, search ingredients, and generate recipes.</p>
+          </article>
+
+          <article class="feature">
+            <div class="feature-icon">&#x1F6D2;</div>
+            <h3>Smart pantry</h3>
+            <p>Track what you have at home. The AI uses your pantry when suggesting meals, so you cook with what you already own instead of buying more.</p>
+          </article>
+
+          <article class="feature">
+            <div class="feature-icon">&#x1F4D6;</div>
+            <h3>Recipe library</h3>
+            <p>Every recipe the AI generates can be saved. Full ingredients, step-by-step instructions, macros per serving, and dietary tags &mdash; all yours to keep.</p>
+          </article>
+
+          <article class="feature">
+            <div class="feature-icon">&#x26A0;&#xFE0F;</div>
+            <h3>Allergy blacklist</h3>
+            <p>Tell DietApp what you can&rsquo;t eat once. It remembers forever and cross-checks every recipe, every suggestion, every grocery list.</p>
+          </article>
+
+          <article class="feature">
+            <div class="feature-icon">&#x1F4F7;</div>
+            <h3>Vision mode</h3>
+            <p>Snap a photo of your fridge or a restaurant menu. With local vision models, DietApp identifies ingredients and suggests what to cook or order.</p>
+          </article>
+
+          <article class="feature">
+            <div class="feature-icon">&#x1F4C5;</div>
+            <h3>Weekly meal plans</h3>
+            <p>Ask for a week of lunches, a high-protein plan, or a low-carb rotation. DietApp builds it, respects your restrictions, and generates the grocery list.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="how" id="how-it-works">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">How it works</span>
+          <h2>From zero to meal plan in three steps.</h2>
+        </div>
+
+        <ol class="steps">
+          <li class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h3>Tell us what you can&rsquo;t eat</h3>
+              <p>Type a sentence like <em>&ldquo;I&rsquo;m allergic to peanuts and shellfish, and I hate cilantro.&rdquo;</em> The AI extracts every ingredient and adds it to your blacklist automatically.</p>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h3>Stock your pantry</h3>
+              <p>Add what you have at home. DietApp will prioritise recipes that use those ingredients, reducing waste and grocery bills.</p>
+            </div>
+          </li>
+          <li class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h3>Chat your way to dinner</h3>
+              <p>Ask for recipes, nutrition breakdowns, weekly plans, or grocery lists. Every answer is grounded in your data &mdash; never generic.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="ai" id="ai">
+      <div class="container ai-inner">
+        <div class="ai-copy">
+          <span class="eyebrow">Bring your own model</span>
+          <h2>Works with the AI you already trust.</h2>
+          <p>DietApp speaks the OpenAI-compatible Chat Completions API, so it plugs into almost any provider. Run it fully offline with a local model, or point it at a cloud API &mdash; your choice.</p>
+          <ul class="ai-list">
+            <li><strong>OpenAI</strong> &mdash; GPT-4o and friends, with your own API key.</li>
+            <li><strong>OpenRouter</strong> &mdash; one key, hundreds of models.</li>
+            <li><strong>Ollama</strong> &mdash; run Llama, Mistral, or Qwen locally.</li>
+            <li><strong>LM Studio</strong> &mdash; drag-and-drop local models with a GUI.</li>
+            <li><strong>Local manager</strong> &mdash; DietApp can download and run curated models for you, including vision.</li>
+          </ul>
+        </div>
+        <div class="ai-visual">
+          <div class="provider-card">
+            <div class="provider-row"><span class="provider-dot provider-dot--ok"></span> openrouter &middot; anthropic/claude-3.5-sonnet</div>
+            <div class="provider-row"><span class="provider-dot provider-dot--ok"></span> openai &middot; gpt-4o</div>
+            <div class="provider-row"><span class="provider-dot provider-dot--ok"></span> ollama &middot; llama3.1:8b</div>
+            <div class="provider-row"><span class="provider-dot provider-dot--ok"></span> lmstudio &middot; qwen2.5-7b</div>
+            <div class="provider-row"><span class="provider-dot provider-dot--active"></span> local &middot; dietapp-vision-7b <em>(active)</em></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="showcase">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">Inside the app</span>
+          <h2>Designed to stay out of your way.</h2>
+          <p class="section-sub">A calm, handcrafted interface with light and dark themes. No ads, no gamification, no noise.</p>
+        </div>
+
+        <div class="showcase-grid">
+          <figure class="showcase-card">
+            <div class="showcase-screen showcase-screen--chat">
+              <div class="sc-msg sc-msg--u">What can I make with chicken and rice?</div>
+              <div class="sc-msg sc-msg--a">3 ideas: chicken fried rice, chicken biryani, or a creamy chicken &amp; rice soup. Which sounds good?</div>
+            </div>
+            <figcaption>Chat</figcaption>
+          </figure>
+
+          <figure class="showcase-card">
+            <div class="showcase-screen showcase-screen--pantry">
+              <div class="sc-row"><span>chicken breast</span><span class="sc-meta">500 g</span></div>
+              <div class="sc-row"><span>basmati rice</span><span class="sc-meta">1 kg</span></div>
+              <div class="sc-row"><span>spinach</span><span class="sc-meta">200 g</span></div>
+              <div class="sc-row"><span>greek yogurt</span><span class="sc-meta">500 g</span></div>
+            </div>
+            <figcaption>Pantry</figcaption>
+          </figure>
+
+          <figure class="showcase-card">
+            <div class="showcase-screen showcase-screen--recipe">
+              <div class="sc-recipe-title">Tofu &amp; Chickpea Curry</div>
+              <div class="sc-recipe-macros">
+                <span><strong>520</strong> kcal</span>
+                <span><strong>38g</strong> protein</span>
+                <span><strong>54g</strong> carbs</span>
+                <span><strong>18g</strong> fat</span>
+              </div>
+              <div class="sc-tag sc-tag--v">vegan</div>
+              <div class="sc-tag sc-tag--gf">gluten-free</div>
+            </div>
+            <figcaption>Recipe library</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="faq" id="faq">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">FAQ</span>
+          <h2>Common questions.</h2>
+        </div>
+
+        <div class="faq-grid">
+          <details class="faq-item" open>
+            <summary>Is my data private?</summary>
+            <p>Yes. Everything lives in a single SQLite file on your machine. Nothing is sent anywhere except the AI provider you choose to use.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Can I run it fully offline?</summary>
+            <p>Absolutely. Point DietApp at Ollama or LM Studio, or use the built-in local model manager to download a curated model. No internet required after setup.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Does it handle serious allergies?</summary>
+            <p>DietApp cross-checks every recipe against your blacklist and dietary restrictions. For life-threatening allergies, always double-check labels &mdash; the AI is an assistant, not a medical device.</p>
+          </details>
+          <details class="faq-item">
+            <summary>How is this different from ChatGPT?</summary>
+            <p>ChatGPT forgets you between sessions. DietApp persists your pantry, restrictions, blacklist, and saved recipes, and uses them as context in every conversation.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Is there a mobile app?</summary>
+            <p>DietApp is a responsive web app. Run the binary on any server (a Raspberry Pi, a VPS, your laptop) and open it from your phone&rsquo;s browser.</p>
+          </details>
+          <details class="faq-item">
+            <summary>What does it cost?</summary>
+            <p>The app itself is free and open source. You pay only for the AI provider you use &mdash; or nothing if you run a local model.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta" id="get-started">
+      <div class="container cta-inner">
+        <h2>Ready to eat smarter?</h2>
+        <p>One binary. One SQLite file. Zero JS build step. Clone, configure, run.</p>
+        <div class="cta-code">
+          <pre><code>git clone https://github.com/orionryan/diet-app-go
+cp .env.example .env
+go run ./cmd/server</code></pre>
+        </div>
+        <div class="cta-actions">
+          <a href="https://github.com/orionryan/diet-app-go" class="btn btn-primary btn-lg">View on GitHub</a>
+          <a href="#features" class="btn btn-ghost btn-lg">Read the docs</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <span class="brand-icon" aria-hidden="true">&#x1F957;</span>
+        <span>DietApp</span>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/orionryan/diet-app-go">GitHub</a>
+        <a href="#features">Features</a>
+        <a href="#faq">FAQ</a>
+      </div>
+      <div class="footer-copy">&copy; 2026 DietApp. Open source.</div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var toggle = document.getElementById('nav-toggle');
+      var nav = document.getElementById('nav');
+      toggle.addEventListener('click', function () {
+        var open = nav.classList.toggle('nav--open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+      nav.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () {
+          nav.classList.remove('nav--open');
+          toggle.setAttribute('aria-expanded', 'false');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
