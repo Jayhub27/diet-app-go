@@ -21,8 +21,7 @@
 }
 
 /* ---------- design tokens (dark) ---------- */
-@media (prefers-color-scheme: dark) {
-  :root {
+:root.dark {
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
     --card: oklch(0.205 0 0);
@@ -38,7 +37,6 @@
     --accent-foreground: oklch(0.145 0 0);
     --destructive: oklch(0.704 0.191 22.216);
   }
-}
 
 /* ---------- base ---------- */
 html {
@@ -188,6 +186,30 @@ a:hover { color: var(--accent-hover); }
   align-items: center;
   gap: 1rem;
 }
+
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: calc(var(--radius) * 0.6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  font-size: 1.1rem;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.theme-toggle:hover {
+  color: var(--foreground);
+  background: var(--muted);
+}
+.theme-toggle .icon-sun { display: none; }
+.theme-toggle .icon-moon { display: inline; }
+:root.dark .theme-toggle .icon-sun { display: inline; }
+:root.dark .theme-toggle .icon-moon { display: none; }
 
 .nav-toggle {
   display: none;
@@ -696,6 +718,413 @@ a:hover { color: var(--accent-hover); }
   font-size: 0.9rem;
 }
 
+/* ---------- download page ---------- */
+.download-hero {
+  padding: 4rem 0 5rem;
+}
+
+.platform-detector {
+  background: var(--card);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 3rem;
+  box-shadow: 0 8px 24px color-mix(in oklch, var(--accent) 15%, transparent);
+}
+.platform-icon {
+  font-size: 3rem;
+  flex-shrink: 0;
+}
+.platform-info {
+  flex: 1;
+}
+.platform-info h3 {
+  margin: 0 0 0.5rem;
+}
+.platform-info p {
+  margin: 0;
+  color: var(--muted-foreground);
+}
+
+.platforms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+.platform-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  text-align: center;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.platform-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px color-mix(in oklch, var(--accent) 10%, transparent);
+}
+.platform-card--detected {
+  border-color: var(--accent);
+  background: color-mix(in oklch, var(--accent) 5%, var(--card));
+}
+.platform-card-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+.platform-card h3 {
+  margin-bottom: 0.5rem;
+}
+.platform-card p {
+  color: var(--muted-foreground);
+  margin-bottom: 1.5rem;
+}
+.platform-downloads {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.platform-install-cmd {
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 0.6);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+}
+.platform-install-cmd code {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+  font-size: 0.9rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.install-guide {
+  padding: 5rem 0;
+  background: var(--muted);
+}
+
+.install-tabs {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+.tab-btn {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+  padding: 0.65rem 1.5rem;
+  border-radius: calc(var(--radius) * 0.8);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.tab-btn:hover {
+  border-color: var(--accent);
+  color: var(--foreground);
+}
+.tab-btn.active {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  border-color: var(--accent);
+}
+
+.tab-content {
+  display: none;
+  max-width: 800px;
+  margin: 0 auto;
+}
+.tab-content.active {
+  display: block;
+}
+
+.install-step {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.install-step h3 {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+.install-step pre {
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 0.6);
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 0;
+}
+.install-step code {
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+  font-size: 0.9rem;
+}
+.install-note {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--accent-soft);
+  border-radius: calc(var(--radius) * 0.6);
+  color: var(--foreground);
+  font-size: 0.95rem;
+}
+
+.requirements {
+  padding: 5rem 0;
+}
+.requirements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+.requirement-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+}
+.requirement-card h3 {
+  margin-bottom: 1rem;
+}
+.requirement-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.requirement-card li {
+  color: var(--muted-foreground);
+  padding-left: 1.5rem;
+  position: relative;
+}
+.requirement-card li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
+
+/* ---------- pricing page ---------- */
+.pricing-hero {
+  padding: 4rem 0 5rem;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.pricing-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.pricing-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px color-mix(in oklch, var(--accent) 10%, transparent);
+}
+.pricing-card--featured {
+  border-color: var(--accent);
+  box-shadow: 0 12px 32px color-mix(in oklch, var(--accent) 20%, transparent);
+  transform: scale(1.05);
+}
+.pricing-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: var(--accent-foreground);
+  padding: 0.4rem 1.25rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pricing-header {
+  text-align: center;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+.pricing-header h3 {
+  margin-bottom: 1rem;
+}
+.pricing-price {
+  margin-bottom: 1rem;
+}
+.price-amount {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--accent);
+  display: block;
+}
+.price-period {
+  color: var(--muted-foreground);
+  font-size: 1rem;
+}
+.pricing-desc {
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+.pricing-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  flex: 1;
+}
+.pricing-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  color: var(--foreground);
+}
+.check {
+  color: var(--accent);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.cross {
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+
+.pricing-cta {
+  text-align: center;
+}
+.pricing-note {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+}
+
+.ai-costs {
+  padding: 5rem 0;
+  background: var(--muted);
+}
+
+.ai-costs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+}
+.ai-cost-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+}
+.ai-cost-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.ai-cost-header h3 {
+  margin: 0;
+}
+.ai-cost-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+}
+.ai-cost-badge--free {
+  background: oklch(0.7 0.2 145 / 0.2);
+  color: oklch(0.5 0.2 145);
+}
+.ai-cost-badge--paid {
+  background: oklch(0.7 0.2 85 / 0.2);
+  color: oklch(0.5 0.2 85);
+}
+.ai-cost-card > p {
+  color: var(--muted-foreground);
+  margin-bottom: 1.5rem;
+}
+.ai-cost-details {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+.ai-cost-details li {
+  color: var(--muted-foreground);
+}
+.ai-cost-details strong {
+  color: var(--foreground);
+}
+
+.ai-cost-note {
+  max-width: 800px;
+  margin: 2rem auto 0;
+  padding: 1.5rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-align: center;
+}
+.ai-cost-note p {
+  margin: 0;
+  color: var(--muted-foreground);
+}
+
+.comparison {
+  padding: 5rem 0;
+}
+
+.comparison-table {
+  max-width: 1000px;
+  margin: 0 auto;
+  overflow-x: auto;
+}
+.comparison-table table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.comparison-table th {
+  background: var(--muted);
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+.comparison-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.comparison-table tr:last-child td {
+  border-bottom: none;
+}
+.comparison-table td:not(:first-child) {
+  text-align: center;
+}
+
 /* ---------- responsive ---------- */
 @media (max-width: 900px) {
   .hero-inner,
@@ -705,6 +1134,13 @@ a:hover { color: var(--accent-hover); }
   }
   .hero-visual {
     order: -1;
+  }
+  .pricing-card--featured {
+    transform: scale(1);
+  }
+  .platform-detector {
+    flex-direction: column;
+    text-align: center;
   }
 }
 
@@ -750,7 +1186,11 @@ a:hover { color: var(--accent-hover); }
     flex-direction: column;
   }
   .feature-grid,
-  .showcase-grid {
+  .showcase-grid,
+  .platforms-grid,
+  .pricing-grid,
+  .ai-costs-grid,
+  .requirements-grid {
     grid-template-columns: 1fr;
   }
   .step {
@@ -760,5 +1200,18 @@ a:hover { color: var(--accent-hover); }
   .footer-inner {
     flex-direction: column;
     text-align: center;
+  }
+  .install-tabs {
+    flex-direction: column;
+  }
+  .tab-btn {
+    width: 100%;
+  }
+  .comparison-table {
+    font-size: 0.85rem;
+  }
+  .comparison-table th,
+  .comparison-table td {
+    padding: 0.75rem 0.5rem;
   }
 }

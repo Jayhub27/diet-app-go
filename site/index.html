@@ -10,6 +10,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/site.css">
+  <script>
+    (function(){
+      var s=localStorage.getItem('dietapp-theme');
+      var p=window.matchMedia('(prefers-color-scheme:dark)').matches;
+      if(s==='dark'||(!s&&p))document.documentElement.classList.add('dark');
+    })();
+  </script>
 </head>
 <body>
   <header class="site-header" id="header">
@@ -22,10 +29,15 @@
         <a href="#features">Features</a>
         <a href="#how-it-works">How it works</a>
         <a href="#ai">AI Models</a>
-        <a href="#faq">FAQ</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="download.html">Download</a>
       </nav>
       <div class="header-actions">
-        <a href="#get-started" class="btn btn-primary">Get started</a>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+          <span class="icon-sun">&#9728;</span>
+          <span class="icon-moon">&#9790;</span>
+        </button>
+        <a href="download.html" class="btn btn-primary">Get started</a>
         <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
           <span></span><span></span><span></span>
         </button>
@@ -301,9 +313,10 @@ go run ./cmd/server</code></pre>
         <span>DietApp</span>
       </div>
       <div class="footer-links">
-        <a href="https://github.com/orionryan/diet-app-go">GitHub</a>
+        <a href="https://github.com/Jayhub27/diet-app-go">GitHub</a>
         <a href="#features">Features</a>
-        <a href="#faq">FAQ</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="download.html">Download</a>
       </div>
       <div class="footer-copy">&copy; 2026 DietApp. Open source.</div>
     </div>
@@ -322,6 +335,13 @@ go run ./cmd/server</code></pre>
           nav.classList.remove('nav--open');
           toggle.setAttribute('aria-expanded', 'false');
         });
+      });
+
+      var themeBtn = document.getElementById('theme-toggle');
+      themeBtn.addEventListener('click', function () {
+        var root = document.documentElement;
+        root.classList.toggle('dark');
+        localStorage.setItem('dietapp-theme', root.classList.contains('dark') ? 'dark' : 'light');
       });
     })();
   </script>
