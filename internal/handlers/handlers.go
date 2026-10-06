@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -53,8 +54,12 @@ func (h *Handlers) Register(e *echo.Echo) {
 	e.Static("/static", "static")
 
 	// App
-	e.GET("/", h.Chat)
+	e.GET("/", h.Home)
+	e.GET("/chat", h.Chat)
 	e.POST("/chat", h.ChatSend) // HTMX form post
+	e.GET("/chat/stream", h.ChatStream) // SSE token stream
+	e.GET("/scan", h.ScanPage)
+	e.POST("/scan", h.ScanIngredients) // multipart image upload
 	e.GET("/pantry", h.Pantry)
 	e.POST("/pantry", h.PantryAdd)
 	e.DELETE("/pantry/:id", h.PantryDelete)
@@ -65,6 +70,7 @@ func (h *Handlers) Register(e *echo.Echo) {
 	e.POST("/restrictions", h.RestrictionAdd)
 	e.DELETE("/restrictions/:id", h.RestrictionDelete)
 	e.POST("/blacklist", h.BlacklistAdd)
+	e.POST("/blacklist/import", h.BlacklistImport)
 	e.DELETE("/blacklist/:id", h.BlacklistDelete)
 	e.POST("/settings", h.SettingsSave)
 
@@ -98,8 +104,12 @@ func (h *Handlers) page(c echo.Context, name string, data any) error {
 
 func titleFor(name string) string {
 	switch name {
+	case "home":
+		return "DietApp"
 	case "chat":
 		return "Chat"
+	case "scan":
+		return "Scan"
 	case "pantry":
 		return "Pantry"
 	case "library":
@@ -119,6 +129,135 @@ func asMap(v any) map[string]any {
 		return m
 	}
 	return map[string]any{}
+}
+
+// --- home (blacklist onboarding) ---
+
+func (h *Handlers) Home(c echo.Context) error {
+	u := auth.CurrentUser(c)
+	bl, err := h.loadBlacklist(c.Request().Context(), u.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return h.page(c, "home", map[string]any{
+		"Blacklist": bl,
+	})
+}
+
+// BlacklistImport accepts free-form text describing what the user can't eat,
+// runs the agent to extract concrete ingredients, and inserts them into the
+// blacklist table. Returns the agent reply as a chat bubble plus an OOB swap
+// of the full blacklist list.
+func (h *Handlers) BlacklistImport(c echo.Context) error {
+	u := auth.CurrentUser(c)
+	if u == nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "sign in first")
+	}
+
+	rl := h.Limiter.Allow("chat:" + u.ID)
+	if !rl.Allowed {
+		return c.String(http.StatusTooManyRequests, "You're going a bit fast — try again in a few seconds.")
+	}
+
+	answer := strings.TrimSpace(c.FormValue("answer"))
+	if answer == "" {
+		return c.NoContent(http.StatusBadRequest)
+	}
+
+	ctx := c.Request().Context()
+	settings, err := h.loadSettings(ctx, u.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	src := provider.Source(settings.Source)
+	if src == "" {
+		src = provider.Source(h.Cfg.DefaultAISource)
+	}
+	model := settings.ModelID
+	if model == "" {
+		model = h.Cfg.DefaultAIModel
+	}
+	apiKey := settings.APIKey
+	if apiKey == "" {
+		apiKey = h.providerDefaultKey(src)
+	}
+	baseURL := settings.BaseURL
+	if baseURL == "" {
+		baseURL = h.providerDefaultBaseURL(src)
+	}
+
+	client := provider.New(provider.Options{
+		Source:    src,
+		Model:     model,
+		APIKey:    apiKey,
+		BaseURL:   baseURL,
+		AppURL:    h.Cfg.OpenRouterAppURL,
+		AppName:   h.Cfg.OpenRouterAppName,
+		ModelPath: h.Cfg.LocalModelPath,
+	})
+
+	// Existing blacklist so the agent can report duplicates instead of re-adding.
+	existing, err := h.loadBlacklist(ctx, u.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	existingNames := make([]string, 0, len(existing))
+	for _, b := range existing {
+		existingNames = append(existingNames, b.Ingredient)
+	}
+
+	agentTools := []*tools.Tool{
+		tools.AddToBlacklist(h.DB, u.ID),
+		tools.RemoveFromBlacklist(h.DB, u.ID),
+	}
+
+	sys := ai.SystemPrompt + "\n\n" +
+		"The user is answering the question \"What can you not eat?\" " +
+		"Extract concrete ingredient names from their answer and add each one " +
+		"to the blacklist with add_to_blacklist. Do NOT add ingredients the " +
+		"user says they CAN eat. If the answer is vague, add what you can and " +
+		"ask for clarification in your reply. Keep the reply to one short sentence."
+
+	if len(existingNames) > 0 {
+		sys += "\n\nAlready on the blacklist (don't add duplicates): " + strings.Join(existingNames, ", ") + "."
+	}
+
+	agent := &ai.Agent{Client: client, Model: model, Tools: agentTools, MaxSteps: 4}
+	res, err := agent.Run(ctx, ai.RunOptions{
+		System:   sys,
+		Messages: []provider.Message{{Role: "user", Content: answer}},
+	})
+	reply := ""
+	if err != nil {
+		reply = "Sorry — the AI call failed: " + err.Error()
+	} else if res.Reply != "" {
+		reply = res.Reply
+	} else {
+		reply = "Done."
+	}
+
+	// Re-read the blacklist (the tool added rows) and render the full list
+	// as an out-of-band swap so HTMX replaces the existing list.
+	updated, err := h.loadBlacklist(ctx, u.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	w := c.Response().Writer
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := h.Templates.RenderPartial(w, "partials/assistant_message.html", map[string]any{
+		"Content": reply,
+	}); err != nil {
+		return err
+	}
+	_, _ = w.Write([]byte("\n"))
+	if err := h.Templates.RenderPartial(w, "partials/blacklist_list.html", map[string]any{
+		"Blacklist": updated,
+	}); err != nil {
+		return err
+	}
+	return nil
 }
 
 // --- chat ---
@@ -175,6 +314,69 @@ func (h *Handlers) loadOrCreateConversation(ctx context.Context, userID string) 
 		out = append(out, m)
 	}
 	return convID, out, nil
+}
+
+type chatContext struct {
+	settings     settingsRow
+	pantry       []pantryRow
+	restrictions []restrictionRow
+	blacklist    []blacklistRow
+}
+
+func (h *Handlers) loadChatContext(ctx context.Context, userID string) (*chatContext, error) {
+	settings, err := h.loadSettings(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	pantry, err := h.loadPantry(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	restrictions, err := h.loadRestrictions(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	blacklist, err := h.loadBlacklist(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return &chatContext{settings: settings, pantry: pantry, restrictions: restrictions, blacklist: blacklist}, nil
+}
+
+func (h *Handlers) resolveProvider(s settingsRow) (src provider.Source, model, apiKey, baseURL string) {
+	src = provider.Source(s.Source)
+	if src == "" {
+		src = provider.Source(h.Cfg.DefaultAISource)
+	}
+	model = s.ModelID
+	if model == "" {
+		model = h.Cfg.DefaultAIModel
+	}
+	apiKey = s.APIKey
+	if apiKey == "" {
+		apiKey = h.providerDefaultKey(src)
+	}
+	baseURL = s.BaseURL
+	if baseURL == "" {
+		baseURL = h.providerDefaultBaseURL(src)
+	}
+	return
+}
+
+func agentViews(cc *chatContext) (rs []tools.Restriction, pantryView []map[string]any, bl []string) {
+	rs = make([]tools.Restriction, 0, len(cc.restrictions))
+	for _, r := range cc.restrictions {
+		rs = append(rs, tools.Restriction{Name: r.Restriction, Severity: tools.Severity(r.Severity)})
+	}
+	pantryView = make([]map[string]any, 0, len(cc.pantry))
+	for _, p := range cc.pantry {
+		pantryView = append(pantryView, map[string]any{"name": p.Name, "amount": p.Amount, "unit": p.Unit})
+	}
+	bl = make([]string, 0, len(cc.blacklist))
+	for _, b := range cc.blacklist {
+		bl = append(bl, b.Ingredient)
+	}
+	return
 }
 
 func (h *Handlers) ChatSend(c echo.Context) error {
@@ -240,7 +442,7 @@ func (h *Handlers) ChatSend(c echo.Context) error {
 	// Persist user message (mention attached images in transcript).
 	persistedUserText := userText
 	if len(imagePaths) > 0 {
-		persistedUserText = "[attached " + fmtInt(len(imagePaths)) + " image(s)]\n" + userText
+		persistedUserText = "[attached " + strconv.Itoa(len(imagePaths)) + " image(s)]\n" + userText
 	}
 	userMsgID := uuid.NewString()
 	_, err = h.DB.ExecContext(ctx,
@@ -250,47 +452,15 @@ func (h *Handlers) ChatSend(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	// Load user context (pantry, restrictions, blacklist) and settings.
-	settings, err := h.loadSettings(ctx, u.ID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-	pantry, err := h.loadPantry(ctx, u.ID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-	restrictions, err := h.loadRestrictions(ctx, u.ID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
-	blacklist, err := h.loadBlacklist(ctx, u.ID)
+	cc, err := h.loadChatContext(ctx, u.ID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 
-	// Build provider + agent.
-	src := provider.Source(settings.Source)
-	if src == "" {
-		src = provider.Source(h.Cfg.DefaultAISource)
-	}
-	model := settings.ModelID
-	if model == "" {
-		model = h.Cfg.DefaultAIModel
-	}
-	apiKey := settings.APIKey
-	if apiKey == "" {
-		apiKey = h.providerDefaultKey(src)
-	}
-	baseURL := settings.BaseURL
-	if baseURL == "" {
-		baseURL = h.providerDefaultBaseURL(src)
-	}
+	src, model, apiKey, baseURL := h.resolveProvider(cc.settings)
 
-	// If using the local source AND the user attached images AND the active
-	// model is vision-capable, bypass the agent's tool loop and call the
-	// manager's vision path directly.
 	if src == provider.SourceLocal && len(imagePaths) > 0 && h.LocalAI != nil && h.LocalAI.IsVision() {
-		reply, vErr := h.runVisionLocal(ctx, userText, imagePaths, pantry, restrictions, blacklist)
+		reply, vErr := h.runVisionLocal(ctx, userText, imagePaths, cc.pantry, cc.restrictions, cc.blacklist)
 		if vErr != nil {
 			return h.renderChatBubble(c, persistedUserText, "Sorry — the AI call failed: "+vErr.Error(), nil)
 		}
@@ -298,9 +468,6 @@ func (h *Handlers) ChatSend(c echo.Context) error {
 		return h.renderChatBubble(c, persistedUserText, reply, nil)
 	}
 
-	// Local source with no images: just use the provider.Client path —
-	// the local hook is wired at startup, so source=local transparently
-	// dispatches to the manager.
 	client := provider.New(provider.Options{
 		Source:    src,
 		Model:     model,
@@ -311,25 +478,8 @@ func (h *Handlers) ChatSend(c echo.Context) error {
 		ModelPath: h.Cfg.LocalModelPath,
 	})
 
-	// Build the tool-call context (typed for the tools package).
-	rs := make([]tools.Restriction, 0, len(restrictions))
-	for _, r := range restrictions {
-		rs = append(rs, tools.Restriction{Name: r.Restriction, Severity: tools.Severity(r.Severity)})
-	}
-	pantryView := make([]map[string]any, 0, len(pantry))
-	for _, p := range pantry {
-		pantryView = append(pantryView, map[string]any{
-			"name": p.Name, "amount": p.Amount, "unit": p.Unit,
-		})
-	}
-	bl := make([]string, 0, len(blacklist))
-	for _, b := range blacklist {
-		bl = append(bl, b.Ingredient)
-	}
+	rs, pantryView, bl := agentViews(cc)
 
-	// All agent tools (mirrors the OG tool set). Heavy tools that make their
-	// own LLM calls reuse the same provider client; DB-backed tools get the
-	// connection and user id.
 	agentTools := []*tools.Tool{
 		tools.ComputeNutrition(),
 		tools.GenerateRecipe(),
@@ -339,6 +489,8 @@ func (h *Handlers) ChatSend(c echo.Context) error {
 		tools.AddToPantry(h.DB, u.ID),
 		tools.RemoveFromPantry(h.DB, u.ID),
 		tools.ListPantry(h.DB, u.ID),
+		tools.AddToBlacklist(h.DB, u.ID),
+		tools.RemoveFromBlacklist(h.DB, u.ID),
 		tools.SaveRecipeToLibrary(h.DB, u.ID),
 		tools.BuildGroceryList(),
 		tools.ValidateIngredientsDeep(client),
@@ -424,37 +576,180 @@ func (h *Handlers) runVisionLocal(ctx context.Context, userText string, imagePat
 	return resp.Choices[0].Message.Content, nil
 }
 
+// ChatStream is the SSE endpoint used by the chat UI to render the assistant
+// reply token-by-token. It mirrors ChatSend's setup but streams deltas instead
+// of returning one HTML blob. The final event carries the full reply so the
+// client can finalize the bubble and we can persist it.
+func (h *Handlers) ChatStream(c echo.Context) error {
+	u := auth.CurrentUser(c)
+	if u == nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "sign in first")
+	}
+	rl := h.Limiter.Allow("chat:" + u.ID)
+	if !rl.Allowed {
+		return c.String(http.StatusTooManyRequests, "You're going a bit fast — try again in a few seconds.")
+	}
+
+	userText := strings.TrimSpace(c.QueryParam("message"))
+	if userText == "" {
+		return c.NoContent(http.StatusBadRequest)
+	}
+
+	// Image attachments aren't supported over SSE (multipart + EventSource
+	// don't mix); fall back to the non-streaming vision path.
+	if c.QueryParam("hasImages") == "1" {
+		return h.chatStreamFallback(c, u, userText)
+	}
+
+	ctx := c.Request().Context()
+	convID, _, err := h.loadOrCreateConversation(ctx, u.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	userMsgID := uuid.NewString()
+	_, err = h.DB.ExecContext(ctx,
+		`insert into messages (id, conversation_id, user_id, role, content) values (?, ?, ?, 'user', ?)`,
+		userMsgID, convID, u.ID, userText)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	cc, err := h.loadChatContext(ctx, u.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	src, model, apiKey, baseURL := h.resolveProvider(cc.settings)
+
+	client := provider.New(provider.Options{
+		Source:    src,
+		Model:     model,
+		APIKey:    apiKey,
+		BaseURL:   baseURL,
+		AppURL:    h.Cfg.OpenRouterAppURL,
+		AppName:   h.Cfg.OpenRouterAppName,
+		ModelPath: h.Cfg.LocalModelPath,
+	})
+
+	rs, pantryView, bl := agentViews(cc)
+
+	agentTools := []*tools.Tool{
+		tools.ComputeNutrition(),
+		tools.GenerateRecipe(),
+		tools.SearchIngredients(),
+		tools.SearchLocations(),
+		tools.ApplyRestrictions(rs),
+		tools.AddToPantry(h.DB, u.ID),
+		tools.RemoveFromPantry(h.DB, u.ID),
+		tools.ListPantry(h.DB, u.ID),
+		tools.AddToBlacklist(h.DB, u.ID),
+		tools.RemoveFromBlacklist(h.DB, u.ID),
+		tools.SaveRecipeToLibrary(h.DB, u.ID),
+		tools.BuildGroceryList(),
+		tools.ValidateIngredientsDeep(client),
+		tools.PlanWeek(client),
+	}
+
+	history, err := h.recentMessages(ctx, convID, 20)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	sys := ai.SystemPrompt + ai.BuildContextBlock(pantryView, rs, bl)
+	provMsgs := make([]provider.Message, 0, len(history)+1)
+	for _, m := range history {
+		provMsgs = append(provMsgs, provider.Message{Role: m.Role, Content: m.Content})
+	}
+	provMsgs = append(provMsgs, provider.Message{Role: "user", Content: userText})
+
+	// ---- SSE plumbing ----
+	w := c.Response().Writer
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		return echo.NewHTTPError(http.StatusInternalServerError, "streaming unsupported")
+	}
+	c.Response().Header().Set("Content-Type", "text/event-stream")
+	c.Response().Header().Set("Cache-Control", "no-cache")
+	c.Response().Header().Set("Connection", "keep-alive")
+	c.Response().Header().Set("X-Accel-Buffering", "no")
+
+	send := func(event string, data string) {
+		_, _ = fmt.Fprintf(w, "event: %s\ndata: %s\n\n", event, data)
+		flusher.Flush()
+	}
+
+	// Tell the client which conversation this belongs to.
+	send("conv", convID)
+
+	agent := &ai.Agent{Client: client, Model: model, Tools: agentTools, MaxSteps: 6}
+	var fullReply strings.Builder
+	var toolHits []map[string]string
+
+	res, runErr := agent.Run(ctx, ai.RunOptions{
+		System:   sys,
+		Messages: provMsgs,
+		OnToken: func(delta string) {
+			fullReply.WriteString(delta)
+			send("token", delta)
+		},
+		OnToolCall: func(name, args string) {
+			send("tool", name)
+		},
+	})
+
+	if runErr != nil {
+		msg := "Sorry — the AI call failed: " + runErr.Error()
+		send("error", msg)
+		h.persistAssistant(ctx, convID, u.ID, msg)
+		send("done", msg)
+		return nil
+	}
+
+	reply := fullReply.String()
+	if reply == "" {
+		reply = "(no reply)"
+	}
+	h.persistAssistant(ctx, convID, u.ID, reply)
+
+	for name := range res.ToolHit {
+		toolHits = append(toolHits, map[string]string{"Name": name, "Result": "called"})
+	}
+	// Send tool hits + final reply as the closing event.
+	toolJSON, _ := json.Marshal(toolHits)
+	send("done", string(toolJSON))
+	return nil
+}
+
+// chatStreamFallback handles image attachments (vision path) which can't stream
+// over EventSource, by returning a single HTML blob like ChatSend does.
+func (h *Handlers) chatStreamFallback(c echo.Context, u *auth.User, userText string) error {
+	ctx := c.Request().Context()
+	convID, _, err := h.loadOrCreateConversation(ctx, u.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	h.DB.ExecContext(ctx,
+		`insert into messages (id, conversation_id, user_id, role, content) values (?, ?, ?, 'user', ?)`,
+		uuid.NewString(), convID, u.ID, userText)
+	pantry, _ := h.loadPantry(ctx, u.ID)
+	restrictions, _ := h.loadRestrictions(ctx, u.ID)
+	blacklist, _ := h.loadBlacklist(ctx, u.ID)
+	if h.LocalAI != nil && h.LocalAI.IsVision() {
+		reply, vErr := h.runVisionLocal(ctx, userText, nil, pantry, restrictions, blacklist)
+		if vErr != nil {
+			return h.renderChatBubble(c, userText, "Sorry — the AI call failed: "+vErr.Error(), nil)
+		}
+		h.persistAssistant(ctx, convID, u.ID, reply)
+		return h.renderChatBubble(c, userText, reply, nil)
+	}
+	return h.renderChatBubble(c, userText, "(vision model not loaded)", nil)
+}
+
 func (h *Handlers) persistAssistant(ctx context.Context, convID, userID, reply string) {
 	_, _ = h.DB.ExecContext(ctx,
 		`insert into messages (id, conversation_id, user_id, role, content) values (?, ?, ?, 'assistant', ?)`,
 		uuid.NewString(), convID, userID, reply)
 	_, _ = h.DB.ExecContext(ctx, `update conversations set updated_at = datetime('now') where id = ?`, convID)
-}
-
-func fmtInt(n int) string {
-	return strconvItoa(n)
-}
-
-func strconvItoa(n int) string {
-	if n == 0 {
-		return "0"
-	}
-	neg := n < 0
-	if neg {
-		n = -n
-	}
-	var b [20]byte
-	i := len(b)
-	for n > 0 {
-		i--
-		b[i] = byte('0' + n%10)
-		n /= 10
-	}
-	if neg {
-		i--
-		b[i] = '-'
-	}
-	return string(b[i:])
 }
 
 func (h *Handlers) renderChatBubble(c echo.Context, userText, reply string, toolHits []map[string]string) error {

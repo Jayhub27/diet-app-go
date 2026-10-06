@@ -1,0 +1,140 @@
+{{define "body"}}
+<section class="scan-section">
+  <h1>Scan ingredients</h1>
+  <p class="scan-sub">Photograph a food label or product and DietApp checks every ingredient against your blacklist.</p>
+
+  <div id="scan-dropzone" class="scan-dropzone" tabindex="0" role="button" aria-label="Upload an image">
+    <div class="scan-dropzone__icon" aria-hidden="true">📷</div>
+    <p class="scan-dropzone__text">
+      <strong>Drop an image here</strong>, paste a screenshot (Ctrl+V), or
+    </p>
+    <div class="scan-dropzone__actions">
+      <button type="button" class="btn-primary" id="scan-choose">Choose image</button>
+      <button type="button" id="scan-camera-btn">Take photo</button>
+    </div>
+    <input type="file" id="scan-file" accept="image/*" hidden>
+    <input type="file" id="scan-camera" accept="image/*" capture="environment" hidden>
+  </div>
+
+  <div id="scan-preview" class="scan-preview" hidden>
+    <img id="scan-preview-img" alt="Selected image preview">
+    <div class="scan-preview__actions">
+      <button type="button" class="btn-primary" id="scan-submit">Scan ingredients</button>
+      <button type="button" class="btn-ghost" id="scan-clear">Clear</button>
+    </div>
+  </div>
+
+  <div id="scan-loading" class="scan-loading" hidden>
+    <div class="chat-typing__dots"><span></span><span></span><span></span></div>
+    <p>Extracting ingredients and checking your blacklist…</p>
+  </div>
+
+  <div id="scan-results"></div>
+</section>
+
+<script>
+  (function () {
+    if (window.__scanInit) return;
+    window.__scanInit = true;
+
+    var dropzone = document.getElementById('scan-dropzone');
+    var fileInput = document.getElementById('scan-file');
+    var cameraInput = document.getElementById('scan-camera');
+    var preview = document.getElementById('scan-preview');
+    var previewImg = document.getElementById('scan-preview-img');
+    var loading = document.getElementById('scan-loading');
+    var results = document.getElementById('scan-results');
+    var pendingFile = null;
+
+    function showPreview(file) {
+      pendingFile = file;
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        previewImg.src = e.target.result;
+        preview.hidden = false;
+        dropzone.style.display = 'none';
+        results.innerHTML = '';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearAll() {
+      pendingFile = null;
+      preview.hidden = true;
+      previewImg.src = '';
+      dropzone.style.display = '';
+      fileInput.value = '';
+      cameraInput.value = '';
+    }
+
+    function submitScan() {
+      if (!pendingFile) return;
+      var fd = new FormData();
+      fd.append('image', pendingFile);
+      loading.hidden = false;
+      preview.hidden = true;
+      results.innerHTML = '';
+      fetch('/scan', { method: 'POST', body: fd })
+        .then(function (r) { return r.text(); })
+        .then(function (html) { results.innerHTML = html; })
+        .catch(function () {
+          results.innerHTML = '<div class="alert">Scan request failed. Check your connection and try again.</div>';
+        })
+        .finally(function () {
+          loading.hidden = true;
+          dropzone.style.display = '';
+        });
+    }
+
+    document.getElementById('scan-choose').addEventListener('click', function (e) {
+      e.stopPropagation();
+      fileInput.click();
+    });
+    document.getElementById('scan-camera-btn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      cameraInput.click();
+    });
+    dropzone.addEventListener('click', function () { fileInput.click(); });
+
+    fileInput.addEventListener('change', function () {
+      if (fileInput.files.length) showPreview(fileInput.files[0]);
+    });
+    cameraInput.addEventListener('change', function () {
+      if (cameraInput.files.length) showPreview(cameraInput.files[0]);
+    });
+
+    // Drag & drop
+    dropzone.addEventListener('dragover', function (e) {
+      e.preventDefault();
+      dropzone.classList.add('scan-dropzone--over');
+    });
+    dropzone.addEventListener('dragleave', function () {
+      dropzone.classList.remove('scan-dropzone--over');
+    });
+    dropzone.addEventListener('drop', function (e) {
+      e.preventDefault();
+      dropzone.classList.remove('scan-dropzone--over');
+      if (e.dataTransfer.files.length) showPreview(e.dataTransfer.files[0]);
+    });
+
+    // Paste from clipboard (desktop)
+    document.addEventListener('paste', function (e) {
+      if (!e.clipboardData) return;
+      var items = e.clipboardData.items;
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image/') === 0) {
+          var file = items[i].getAsFile();
+          if (file) {
+            showPreview(file);
+            e.preventDefault();
+            return;
+          }
+        }
+      }
+    });
+
+    document.getElementById('scan-submit').addEventListener('click', submitScan);
+    document.getElementById('scan-clear').addEventListener('click', clearAll);
+  })();
+</script>
+{{end}}

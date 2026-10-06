@@ -47,6 +47,7 @@
 
   <main>
     <section class="pricing-hero">
+      <canvas id="three-canvas"></canvas>
       <div class="container">
         <div class="section-head">
           <span class="eyebrow">Pricing</span>
@@ -342,6 +343,143 @@
         var root = document.documentElement;
         root.classList.toggle('dark');
         localStorage.setItem('dietapp-theme', root.classList.contains('dark') ? 'dark' : 'light');
+      });
+    })();
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    (function () {
+      var canvas = document.getElementById('three-canvas');
+      if (!canvas) return;
+
+      var scene = new THREE.Scene();
+      var camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+      camera.position.z = 30;
+
+      var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+      var isDark = document.documentElement.classList.contains('dark');
+      var accentColor = new THREE.Color(0x4ade80);
+      var lineColor = new THREE.Color(isDark ? 0x4ade80 : 0x22c55e);
+
+      var particleCount = 120;
+      var positions = new Float32Array(particleCount * 3);
+      var velocities = [];
+      for (var i = 0; i < particleCount; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 60;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 40;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+        velocities.push({
+          x: (Math.random() - 0.5) * 0.02,
+          y: (Math.random() - 0.5) * 0.02,
+          z: (Math.random() - 0.5) * 0.01
+        });
+      }
+
+      var geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+      var material = new THREE.PointsMaterial({
+        color: accentColor,
+        size: 0.15,
+        transparent: true,
+        opacity: 0.6,
+        sizeAttenuation: true
+      });
+
+      var particles = new THREE.Points(geometry, material);
+      scene.add(particles);
+
+      var lineGeometry = new THREE.BufferGeometry();
+      var linePositions = new Float32Array(particleCount * particleCount * 6);
+      lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+      lineGeometry.setDrawRange(0, 0);
+
+      var lineMaterial = new THREE.LineBasicMaterial({
+        color: lineColor,
+        transparent: true,
+        opacity: 0.08
+      });
+
+      var lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+      scene.add(lines);
+
+      var mouse = { x: 0, y: 0 };
+      document.addEventListener('mousemove', function (e) {
+        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      });
+
+      function updateTheme() {
+        isDark = document.documentElement.classList.contains('dark');
+        lineColor.set(isDark ? 0x4ade80 : 0x22c55e);
+        lineMaterial.color = lineColor;
+      }
+
+      var observer = new MutationObserver(updateTheme);
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        var pos = geometry.attributes.position.array;
+        var linePos = lineGeometry.attributes.position.array;
+        var lineIdx = 0;
+        var maxDist = 8;
+
+        for (var i = 0; i < particleCount; i++) {
+          pos[i * 3] += velocities[i].x;
+          pos[i * 3 + 1] += velocities[i].y;
+          pos[i * 3 + 2] += velocities[i].z;
+
+          if (Math.abs(pos[i * 3]) > 30) velocities[i].x *= -1;
+          if (Math.abs(pos[i * 3 + 1]) > 20) velocities[i].y *= -1;
+          if (Math.abs(pos[i * 3 + 2]) > 10) velocities[i].z *= -1;
+
+          for (var j = i + 1; j < particleCount; j++) {
+            var dx = pos[i * 3] - pos[j * 3];
+            var dy = pos[i * 3 + 1] - pos[j * 3 + 1];
+            var dz = pos[i * 3 + 2] - pos[j * 3 + 2];
+            var dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+            if (dist < maxDist) {
+              linePos[lineIdx++] = pos[i * 3];
+              linePos[lineIdx++] = pos[i * 3 + 1];
+              linePos[lineIdx++] = pos[i * 3 + 2];
+              linePos[lineIdx++] = pos[j * 3];
+              linePos[lineIdx++] = pos[j * 3 + 1];
+              linePos[lineIdx++] = pos[j * 3 + 2];
+            }
+          }
+        }
+
+        lineGeometry.attributes.position.needsUpdate = true;
+        lineGeometry.setDrawRange(0, lineIdx / 3);
+        geometry.attributes.position.needsUpdate = true;
+
+        particles.rotation.y += 0.001;
+        particles.rotation.x += 0.0005;
+        lines.rotation.y += 0.001;
+        lines.rotation.x += 0.0005;
+
+        camera.position.x += (mouse.x * 3 - camera.position.x) * 0.02;
+        camera.position.y += (mouse.y * 2 - camera.position.y) * 0.02;
+        camera.lookAt(scene.position);
+
+        renderer.render(scene, camera);
+      }
+
+      animate();
+
+      window.addEventListener('resize', function () {
+        var w = canvas.clientWidth;
+        var h = canvas.clientHeight;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
       });
     })();
   </script>

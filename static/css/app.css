@@ -265,11 +265,16 @@ button[type="submit"]:hover {
 }
 
 /* ---------- chat ---------- */
+.chat-section { display: flex; flex-direction: column; height: calc(100vh - 8rem); }
 .chat-log {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  padding-right: 0.25rem;
 }
 .chat-bubble {
   background: var(--card);
@@ -316,24 +321,116 @@ button[type="submit"]:hover {
   border-radius: 0.25rem;
 }
 
+/* empty state + suggestion chips */
+.chat-empty {
+  align-self: center;
+  text-align: center;
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 2rem 1rem;
+}
+.chat-empty__icon { font-size: 2.5rem; }
+.chat-empty__title { color: var(--muted-foreground); margin: 0; max-width: 28rem; }
+.chat-suggestions { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; max-width: 40rem; }
+.chat-chip {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.05s;
+}
+.chat-chip:hover { background: var(--muted); border-color: var(--accent); color: var(--accent); }
+.chat-chip:active { transform: translateY(1px); }
+
+/* typing indicator */
+.chat-typing__dots { display: inline-flex; gap: 0.25rem; align-items: center; height: 1.25rem; }
+.chat-typing__dots span {
+  width: 0.45rem; height: 0.45rem; border-radius: 999px; background: var(--muted-foreground);
+  animation: chat-typing 1.2s infinite ease-in-out;
+}
+.chat-typing__dots span:nth-child(2) { animation-delay: 0.2s; }
+.chat-typing__dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes chat-typing {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-3px); }
+}
+
+/* chat form (composer) */
 .chat-form {
   display: flex;
-  gap: 0.5rem;
+  align-items: flex-end;
+  gap: 0.4rem;
   position: sticky;
   bottom: 1rem;
   background: color-mix(in oklch, var(--background) 92%, transparent);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  padding: 0.5rem;
+  padding: 0.4rem;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: calc(var(--radius) * 1.3);
+  box-shadow: 0 2px 12px color-mix(in oklch, var(--foreground) 6%, transparent);
 }
-.chat-form input { border: none; box-shadow: none !important; }
-.chat-form input:focus { box-shadow: none !important; }
+.chat-form textarea {
+  flex: 1;
+  border: none;
+  box-shadow: none !important;
+  resize: none;
+  max-height: 160px;
+  padding: 0.65rem 0.5rem;
+  background: transparent;
+  line-height: 1.4;
+  font-size: 0.95rem;
+}
+.chat-form textarea:focus { box-shadow: none !important; border-color: transparent; }
+.chat-attach {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem; height: 2.25rem;
+  border-radius: calc(var(--radius) * 0.8);
+  cursor: pointer;
+  color: var(--muted-foreground);
+  transition: background 0.15s, color 0.15s;
+  position: relative;
+  flex: 0 0 auto;
+}
+.chat-attach:hover { background: var(--muted); color: var(--foreground); }
+.chat-attach__count {
+  position: absolute;
+  top: -0.15rem; right: -0.15rem;
+  min-width: 1rem; height: 1rem;
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-size: 0.65rem;
+  font-weight: 600;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.25rem;
+}
+.chat-attach__count:empty { display: none; }
+.chat-send {
+  flex: 0 0 auto;
+  width: 2.25rem; height: 2.25rem;
+  border-radius: 999px;
+  padding: 0;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.chat-send:disabled { opacity: 0.5; }
 
 .htmx-indicator { display: none; }
 .htmx-request .htmx-indicator,
-.htmx-request.htmx-indicator { display: inline-flex; }
+.htmx-request.htmx-indicator { display: flex; }
+.htmx-request .chat-typing { display: flex; }
+.htmx-request #chat-input { opacity: 0.5; }
 
 @keyframes chat-in {
   from { opacity: 0; transform: translateY(4px); }
@@ -410,3 +507,135 @@ button[type="submit"]:hover {
 section { margin-bottom: 1.5rem; }
 section > h1 { margin-bottom: 1rem; }
 section > form { margin-bottom: 1rem; }
+
+/* ---------- onboarding / blacklist home ---------- */
+.onboard-section { display: flex; flex-direction: column; gap: 1.5rem; }
+.onboard-hero { text-align: center; padding: 1.5rem 0 0.5rem; }
+.onboard-hero h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+.onboard-sub { color: var(--muted-foreground); max-width: 32rem; margin: 0 auto; }
+.onboard-log {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+}
+.onboard-log .chat-bubble { max-width: 95%; }
+.onboard-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  background: color-mix(in oklch, var(--background) 92%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 1.3);
+  box-shadow: 0 2px 12px color-mix(in oklch, var(--foreground) 6%, transparent);
+}
+.onboard-form textarea {
+  flex: 1;
+  border: none;
+  box-shadow: none !important;
+  resize: none;
+  max-height: 220px;
+  padding: 0.65rem 0.5rem;
+  background: transparent;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+.onboard-form textarea:focus { box-shadow: none !important; border-color: transparent; }
+.onboard-form .btn-primary { flex: 0 0 auto; }
+.onboard-blacklist { margin-top: 0.5rem; }
+.onboard-blacklist h2 { margin-top: 0; }
+
+/* ---------- ingredient scanner ---------- */
+.scan-section { display: flex; flex-direction: column; gap: 1.5rem; }
+.scan-sub { color: var(--muted-foreground); margin-top: -0.5rem; }
+
+.scan-dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.scan-dropzone:hover,
+.scan-dropzone--over {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.scan-dropzone__icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+.scan-dropzone__text { color: var(--muted-foreground); margin: 0 0 1rem; }
+.scan-dropzone__actions { display: flex; gap: 0.5rem; justify-content: center; }
+
+.scan-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+}
+.scan-preview img {
+  max-width: 100%;
+  max-height: 320px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+.scan-preview__actions { display: flex; gap: 0.5rem; }
+
+.scan-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem;
+  color: var(--muted-foreground);
+}
+
+.scan-verdict {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+}
+.scan-verdict p { margin: 0.25rem 0 0; font-size: 0.9rem; }
+.scan-verdict--conflict {
+  background: color-mix(in oklch, var(--destructive) 12%, transparent);
+  border: 1px solid color-mix(in oklch, var(--destructive) 30%, transparent);
+  color: var(--destructive);
+}
+.scan-verdict--safe {
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in oklch, var(--accent) 35%, transparent);
+  color: var(--accent);
+}
+:root.dark .scan-verdict--safe { color: var(--accent-hover); }
+.scan-verdict__icon { font-size: 1.25rem; line-height: 1.4; }
+
+.scan-ingredients { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.scan-ingredient {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 0.8);
+  padding: 0.55rem 0.9rem;
+  font-size: 0.92rem;
+}
+.scan-ingredient--conflict {
+  border-color: color-mix(in oklch, var(--destructive) 40%, transparent);
+  background: color-mix(in oklch, var(--destructive) 8%, transparent);
+}
+.scan-ingredient--conflict .scan-ingredient__name {
+  color: var(--destructive);
+  font-weight: 600;
+}
+.scan-ingredient__match {
+  font-size: 0.78rem;
+  color: var(--destructive);
+  opacity: 0.85;
+}

@@ -2,9 +2,7 @@ package localai
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/hybridgroup/yzma/pkg/llama"
@@ -77,7 +75,7 @@ func (m *Manager) Chat(ctx context.Context, req provider.ChatRequest) (*provider
 
 	var toolCalls []provider.ToolCall
 	if len(req.Tools) > 0 {
-		toolCalls, reply = parseToolCallsFromText(reply)
+		toolCalls, reply = provider.ParseToolCallsFromText(reply)
 	}
 
 	return &provider.ChatResponse{
@@ -96,6 +94,90 @@ func (m *Manager) Chat(ctx context.Context, req provider.ChatRequest) (*provider
 func (m *Manager) IsVision() bool {
 	lm := m.Active()
 	return lm != nil && lm.IsVision
+}
+
+// Stream runs a streaming chat completion against the active model, invoking
+// onDelta for every generated token. Tool calls are returned on the final
+// chunk (parsed from the generated text, since local models emit tool calls as
+// [[TOOL_CALL]] markup). onDelta is always called once with Done=true at the
+// end (or Error set on failure).
+func (m *Manager) Stream(ctx context.Context, req provider.ChatRequest, onDelta func(provider.StreamChunk)) error {
+	lm := m.Active()
+	if lm == nil {
+		err := fmt.Errorf("no local model loaded; visit /models to load one")
+		onDelta(provider.StreamChunk{Error: err.Error()})
+		return err
+	}
+	if err := m.InitLibs(); err != nil {
+		onDelta(provider.StreamChunk{Error: err.Error()})
+		return err
+	}
+
+	lm.mu.Lock()
+	defer lm.mu.Unlock()
+
+	prompt := buildPrompt(lm, req)
+	tokens := llama.Tokenize(lm.Vocab, prompt, true, true)
+
+	nCtx := int(llama.NCtx(lm.Context))
+	if len(tokens) > nCtx-512 {
+		tokens = tokens[len(tokens)-(nCtx-512):]
+	}
+
+	llama.SamplerReset(lm.Sampler)
+	mem, _ := llama.GetMemory(lm.Context)
+	llama.MemoryClear(mem, true)
+
+	batch := llama.BatchGetOne(tokens)
+	if _, err := llama.Decode(lm.Context, batch); err != nil {
+		e := fmt.Errorf("decode prompt: %w", err)
+		onDelta(provider.StreamChunk{Error: e.Error()})
+		return e
+	}
+
+	maxTokens := 2048
+	generated := make([]llama.Token, 0, maxTokens)
+	nPast := int32(len(tokens))
+
+	for i := 0; i < maxTokens; i++ {
+		if err := ctx.Err(); err != nil {
+			onDelta(provider.StreamChunk{Error: err.Error()})
+			return err
+		}
+		token := llama.SamplerSample(lm.Sampler, lm.Context, -1)
+		llama.SamplerAccept(lm.Sampler, token)
+
+		if llama.VocabIsEOG(lm.Vocab, token) {
+			break
+		}
+
+		generated = append(generated, token)
+
+		// Detokenize just this token for a streaming delta.
+		delta := llama.Detokenize(lm.Vocab, []llama.Token{token}, false, false)
+		if delta != "" {
+			onDelta(provider.StreamChunk{Delta: delta})
+		}
+
+		nextBatch := llama.BatchGetOne([]llama.Token{token})
+		pos := llama.Pos(nPast)
+		nextBatch.Pos = &pos
+		nPast++
+
+		if _, err := llama.Decode(lm.Context, nextBatch); err != nil {
+			e := fmt.Errorf("decode token %d: %v", i, err)
+			onDelta(provider.StreamChunk{Error: e.Error()})
+			return e
+		}
+	}
+
+	reply := llama.Detokenize(lm.Vocab, generated, false, false)
+		var toolCalls []provider.ToolCall
+	if len(req.Tools) > 0 {
+		toolCalls, _ = provider.ParseToolCallsFromText(reply)
+	}
+	onDelta(provider.StreamChunk{ToolCalls: toolCalls, Done: true})
+	return nil
 }
 
 func buildPrompt(lm *LoadedModel, req provider.ChatRequest) string {
@@ -143,50 +225,4 @@ func buildPrompt(lm *LoadedModel, req provider.ChatRequest) string {
 	}
 	sb.WriteString("<|im_start|>assistant\n")
 	return sb.String()
-}
-
-var toolCallRe = regexp.MustCompile(`(?s)\[\[TOOL_CALL\]\](\{.*?\})\[\[TOOL_CALL\]\]`)
-
-func parseToolCallsFromText(text string) ([]provider.ToolCall, string) {
-	matches := toolCallRe.FindAllStringSubmatch(text, -1)
-	if len(matches) == 0 {
-		return nil, text
-	}
-
-	var toolCalls []provider.ToolCall
-	var nonToolParts []string
-	lastEnd := 0
-
-	for _, match := range matches {
-		idx := strings.Index(text[lastEnd:], match[0])
-		if idx > 0 {
-			nonToolParts = append(nonToolParts, text[lastEnd:lastEnd+idx])
-		}
-		lastEnd = lastEnd + idx + len(match[0])
-
-		var parsed struct {
-			Name      string          `json:"name"`
-			Arguments json.RawMessage `json:"arguments"`
-		}
-		if err := json.Unmarshal([]byte(match[1]), &parsed); err != nil {
-			nonToolParts = append(nonToolParts, match[0])
-			continue
-		}
-
-		toolCalls = append(toolCalls, provider.ToolCall{
-			ID:   fmt.Sprintf("call_%d", len(toolCalls)),
-			Type: "function",
-			Function: provider.FunctionCall{
-				Name:      parsed.Name,
-				Arguments: string(parsed.Arguments),
-			},
-		})
-	}
-
-	if lastEnd < len(text) {
-		nonToolParts = append(nonToolParts, text[lastEnd:])
-	}
-
-	cleaned := strings.TrimSpace(strings.Join(nonToolParts, ""))
-	return toolCalls, cleaned
 }

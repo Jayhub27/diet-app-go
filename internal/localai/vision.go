@@ -137,7 +137,7 @@ func (m *Manager) ChatVision(ctx context.Context, req provider.ChatRequest, imag
 
 	var toolCalls []provider.ToolCall
 	if len(req.Tools) > 0 {
-		toolCalls, reply = parseToolCallsFromText(reply)
+		toolCalls, reply = provider.ParseToolCallsFromText(reply)
 	}
 
 	return &provider.ChatResponse{

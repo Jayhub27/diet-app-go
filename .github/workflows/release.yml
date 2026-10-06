@@ -1,0 +1,50 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Build all platforms
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          chmod +x scripts/build.sh
+          VERSION=$VERSION ./scripts/build.sh
+
+      - name: Create archives
+        run: |
+          cd build
+          tar czf dietapp-darwin-arm64.tar.gz dietapp-darwin-arm64
+          tar czf dietapp-darwin-amd64.tar.gz dietapp-darwin-amd64
+          tar czf dietapp-linux-amd64.tar.gz dietapp-linux-amd64
+          tar czf dietapp-linux-arm64.tar.gz dietapp-linux-arm64
+          zip dietapp-windows-amd64.zip dietapp-windows-amd64.exe
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/dietapp-darwin-arm64
+            build/dietapp-darwin-amd64
+            build/dietapp-darwin-arm64.tar.gz
+            build/dietapp-darwin-amd64.tar.gz
+            build/dietapp-linux-amd64
+            build/dietapp-linux-arm64
+            build/dietapp-linux-amd64.tar.gz
+            build/dietapp-linux-arm64.tar.gz
+            build/dietapp-windows-amd64.exe
+            build/dietapp-windows-amd64.zip
+          generate_release_notes: true

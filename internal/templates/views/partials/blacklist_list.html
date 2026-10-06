@@ -1,0 +1,9 @@
+{{define "blacklist_list"}}
+<ul id="blacklist-list" class="list" hx-swap-oob="true">
+  {{range .Blacklist}}
+    {{template "blacklist_item" .}}
+  {{else}}
+    <li class="list-item list-item--empty" id="blacklist-empty">Nothing blacklisted yet. Tell us above.</li>
+  {{end}}
+</ul>
+{{end}}

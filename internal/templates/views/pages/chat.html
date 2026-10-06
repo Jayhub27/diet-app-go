@@ -1,8 +1,8 @@
 {{define "body"}}
-<section>
+<section class="chat-section">
   <h1>Chat with DietApp</h1>
 
-  <div id="chat-log" class="chat-log">
+  <div id="chat-log" class="chat-log" hx-on::after-swap="window.__scrollChatBottom()">
     {{if .Messages}}
       {{range .Messages}}
         {{if eq .Role "user"}}
@@ -18,38 +18,194 @@
         {{end}}
       {{end}}
     {{else}}
-      <div class="chat-bubble chat-bubble--assistant">
-        <div class="chat-bubble__role">dietapp</div>
-        <div>Try: "vegan high-protein dinner under 600 calories" or "what can I make with chicken and rice?"</div>
+      <div class="chat-empty">
+        <div class="chat-empty__icon" aria-hidden="true">🥗</div>
+        <p class="chat-empty__title">Ask me anything about food, recipes, or your pantry.</p>
+        <div class="chat-suggestions">
+          <button class="chat-chip" type="button" data-suggest="Vegan high-protein dinner under 600 calories">Vegan high-protein dinner under 600 calories</button>
+          <button class="chat-chip" type="button" data-suggest="What can I make with chicken and rice?">What can I make with chicken and rice?</button>
+          <button class="chat-chip" type="button" data-suggest="Plan a week of low-carb lunches">Plan a week of low-carb lunches</button>
+        </div>
       </div>
     {{end}}
+    <div id="chat-typing" class="chat-bubble chat-bubble--assistant chat-typing htmx-indicator" aria-hidden="true">
+      <div class="chat-bubble__role">dietapp</div>
+      <div class="chat-typing__dots"><span></span><span></span><span></span></div>
+    </div>
   </div>
 
   <form
-    hx-post="/chat"
-    hx-target="#chat-log"
-    hx-swap="beforeend"
-    hx-indicator="#chat-spinner"
+    id="chat-form"
     class="chat-form"
     enctype="multipart/form-data"
+    onsubmit="return window.__sendChat(event)"
   >
-    <input
+    <label class="chat-attach" title="Attach images (vision models only)">
+      <span aria-hidden="true">📎</span>
+      <input
+        type="file"
+        id="chat-images"
+        name="images"
+        accept="image/*"
+        multiple
+        hidden
+        onchange="document.getElementById('chat-attach-count').textContent = this.files.length ? this.files.length : ''"
+      >
+      <span id="chat-attach-count" class="chat-attach__count"></span>
+    </label>
+    <textarea
+      id="chat-input"
       name="message"
       autocomplete="off"
       autofocus
       placeholder="Ask DietApp…"
       required
-    >
-    <input
-      type="file"
-      name="images"
-      accept="image/*"
-      multiple
-      style="max-width:14rem"
-      title="Attach images (vision models only)"
-    >
-    <button class="btn-primary" type="submit">Send</button>
-    <span id="chat-spinner" class="htmx-indicator" aria-hidden="true">⏳</span>
+      rows="1"
+      oninput="window.__autoGrow(this)"
+      onkeydown="if((event.key==='Enter'||event.code==='Enter')&&!event.shiftKey){event.preventDefault();window.__sendChat(event);}"
+    ></textarea>
+    <button class="btn-primary chat-send" type="submit" aria-label="Send" id="chat-send">
+      <span aria-hidden="true">↑</span>
+    </button>
   </form>
 </section>
+<script>
+  (function () {
+    if (window.__chatInit) return;
+    window.__chatInit = true;
+
+    window.__scrollChatBottom = function () {
+      const log = document.getElementById('chat-log');
+      if (log) log.scrollTop = log.scrollHeight;
+    };
+
+    window.__autoGrow = function (el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+    };
+
+    document.querySelectorAll('.chat-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        const input = document.getElementById('chat-input');
+        input.value = chip.dataset.suggest;
+        window.__autoGrow(input);
+        input.focus();
+        window.__sendChat({ preventDefault() {} });
+      });
+    });
+
+    // Render a user bubble immediately when sending.
+    function appendUserBubble(text) {
+      const log = document.getElementById('chat-log');
+      const div = document.createElement('div');
+      div.className = 'chat-bubble chat-bubble--user';
+      div.innerHTML = '<div class="chat-bubble__role">you</div><div></div>';
+      div.lastChild.textContent = text;
+      log.insertBefore(div, document.getElementById('chat-typing'));
+      window.__scrollChatBottom();
+    }
+
+    // Create an empty assistant bubble we will stream tokens into.
+    function appendStreamingBubble() {
+      const log = document.getElementById('chat-log');
+      const div = document.createElement('div');
+      div.className = 'chat-bubble chat-bubble--assistant chat-bubble--streaming';
+      div.innerHTML = '<div class="chat-bubble__role">dietapp</div><div class="chat-bubble__content"></div>';
+      log.insertBefore(div, document.getElementById('chat-typing'));
+      return div.querySelector('.chat-bubble__content');
+    }
+
+    window.__sendChat = function (ev) {
+      if (ev && ev.preventDefault) ev.preventDefault();
+      const input = document.getElementById('chat-input');
+      const sendBtn = document.getElementById('chat-send');
+      const text = input.value.trim();
+      const images = document.getElementById('chat-images');
+      if (!text) return false;
+
+      const hasImages = images && images.files && images.files.length > 0;
+      appendUserBubble(text);
+      input.value = '';
+      window.__autoGrow(input);
+      sendBtn.disabled = true;
+
+      const target = appendStreamingBubble();
+
+      if (hasImages) {
+        // Image + vision path can't stream over EventSource; fall back to a
+        // normal HTMX-style POST and swap the streaming bubble with the reply.
+        const fd = new FormData();
+        fd.append('message', text);
+        for (const f of images.files) fd.append('images', f);
+        images.value = '';
+        document.getElementById('chat-attach-count').textContent = '';
+        fetch('/chat', { method: 'POST', body: fd })
+          .then(r => r.text())
+          .then(html => {
+            const wrap = document.createElement('div');
+            wrap.innerHTML = html;
+            const bubbles = wrap.querySelectorAll('.chat-bubble');
+            if (bubbles.length) target.parentNode.replaceWith(...bubbles);
+            window.__scrollChatBottom();
+          })
+          .catch(() => { target.textContent = '(request failed)'; })
+          .finally(() => { sendBtn.disabled = false; });
+        return false;
+      }
+
+      const url = '/chat/stream?message=' + encodeURIComponent(text);
+      const es = new EventSource(url);
+      let acc = '';
+      es.addEventListener('token', function (e) {
+        acc += e.data;
+        target.innerHTML = '';
+        target.textContent = acc;
+        window.__scrollChatBottom();
+      });
+      es.addEventListener('tool', function (e) {
+        const note = document.createElement('div');
+        note.className = 'chat-tool-note';
+        note.textContent = 'using ' + e.data + '…';
+        target.appendChild(note);
+        window.__scrollChatBottom();
+      });
+      es.addEventListener('error', function (e) {
+        if (acc === '') {
+          target.textContent = 'Sorry — the AI call failed: ' + (e.data || 'unknown error');
+        }
+        es.close();
+        sendBtn.disabled = false;
+      });
+      es.addEventListener('done', function (e) {
+        // e.data is a JSON array of tool hits (may be empty). Finalize bubble.
+        try {
+          const hits = JSON.parse(e.data || '[]');
+          if (hits.length) {
+            const details = document.createElement('details');
+            const summary = document.createElement('summary');
+            summary.textContent = 'tools used';
+            const ul = document.createElement('ul');
+            hits.forEach(function (h) {
+              const li = document.createElement('li');
+              const code = document.createElement('code');
+              code.textContent = h.Name;
+              ul.appendChild(li); li.appendChild(code);
+            });
+            details.appendChild(summary); details.appendChild(ul);
+            target.parentNode.appendChild(details);
+          }
+        } catch (_) {}
+        target.parentNode.classList.remove('chat-bubble--streaming');
+        es.close();
+        sendBtn.disabled = false;
+        window.__scrollChatBottom();
+      });
+      return false;
+    };
+
+    window.__scrollChatBottom();
+    const ta = document.getElementById('chat-input');
+    if (ta) window.__autoGrow(ta);
+  })();
+</script>
 {{end}}

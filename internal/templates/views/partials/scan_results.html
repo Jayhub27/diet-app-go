@@ -1,0 +1,41 @@
+{{define "scan_results"}}
+<div class="scan-result">
+  {{if .Error}}
+    <div class="alert">{{.Error}}</div>
+  {{else}}
+    {{if .Conflicts}}
+      <div class="scan-verdict scan-verdict--conflict">
+        <span class="scan-verdict__icon" aria-hidden="true">⚠️</span>
+        <div>
+          <strong>{{.Conflicts}} blacklisted ingredient{{if gt .Conflicts 1}}s{{end}} found</strong>
+          <p>This product conflicts with your blacklist. Avoid it.</p>
+        </div>
+      </div>
+    {{else}}
+      <div class="scan-verdict scan-verdict--safe">
+        <span class="scan-verdict__icon" aria-hidden="true">✓</span>
+        <div>
+          <strong>No blacklisted ingredients found</strong>
+          <p>Nothing on your blacklist appears in this product.</p>
+        </div>
+      </div>
+    {{end}}
+
+    <h3>Detected ingredients ({{len .Ingredients}})</h3>
+    <ul class="scan-ingredients">
+      {{range .Ingredients}}
+        {{if .Conflict}}
+          <li class="scan-ingredient scan-ingredient--conflict">
+            <span class="scan-ingredient__name">{{.Name}}</span>
+            <span class="scan-ingredient__match">matches blacklist: {{.Match}}</span>
+          </li>
+        {{else}}
+          <li class="scan-ingredient">
+            <span class="scan-ingredient__name">{{.Name}}</span>
+          </li>
+        {{end}}
+      {{end}}
+    </ul>
+  {{end}}
+</div>
+{{end}}

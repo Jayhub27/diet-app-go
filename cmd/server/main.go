@@ -40,6 +40,9 @@ func main() {
 	provider.SetLocalChatFunc(func(ctx context.Context, req provider.ChatRequest) (*provider.ChatResponse, error) {
 		return aiMgr.Chat(ctx, req)
 	})
+	provider.SetLocalChatStreamFunc(func(ctx context.Context, req provider.ChatRequest, onDelta func(provider.StreamChunk)) error {
+		return aiMgr.Stream(ctx, req, onDelta)
+	})
 
 	authSvc := auth.NewService(d, cfg.SessionSecret, cfg.AllowAnonymous)
 	limiter := ratelimit.New(20, 60_000) // 20 chat messages per minute per user

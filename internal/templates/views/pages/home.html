@@ -1,0 +1,91 @@
+{{define "body"}}
+<section class="onboard-section">
+  <div class="onboard-hero">
+    <h1>What can you not eat?</h1>
+    <p class="onboard-sub">Tell us your allergies, intolerances, or dislikes. We'll remember them and never suggest them in a recipe.</p>
+  </div>
+
+  <div id="onboard-log" class="onboard-log">
+    {{if .Reply}}
+      <div class="chat-bubble chat-bubble--assistant">
+        <div class="chat-bubble__role">dietapp</div>
+        <div>{{.Reply}}</div>
+      </div>
+    {{end}}
+    <div id="onboard-typing" class="chat-bubble chat-bubble--assistant chat-typing htmx-indicator" aria-hidden="true">
+      <div class="chat-bubble__role">dietapp</div>
+      <div class="chat-typing__dots"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <form
+    id="onboard-form"
+    hx-post="/blacklist/import"
+    hx-target="#onboard-log"
+    hx-swap="beforeend"
+    hx-disabled-elt="#onboard-input"
+    hx-indicator="#onboard-typing"
+    class="onboard-form"
+    onsubmit="window.__onboardSubmit(this)"
+  >
+    <textarea
+      id="onboard-input"
+      name="answer"
+      autocomplete="off"
+      autofocus
+      placeholder="e.g. I'm allergic to peanuts and shellfish, and I hate cilantro"
+      required
+      rows="3"
+      oninput="window.__autoGrow(this)"
+      onkeydown="if((event.key==='Enter'||event.code==='Enter')&&!event.shiftKey){event.preventDefault();this.form.requestSubmit();}"
+    ></textarea>
+    <button class="btn-primary" type="submit">Save</button>
+  </form>
+
+  <div class="onboard-blacklist">
+    <h2>Your blacklist</h2>
+    <ul id="blacklist-list" class="list">
+      {{range .Blacklist}}
+        {{template "blacklist_item" .}}
+      {{else}}
+        <li class="list-item list-item--empty" id="blacklist-empty">Nothing blacklisted yet. Tell us above.</li>
+      {{end}}
+    </ul>
+    <form hx-post="/blacklist" hx-target="#blacklist-list" hx-swap="beforeend" class="inline-form" onsubmit="window.__clearEmpty('blacklist-empty')">
+      <input name="ingredient" required placeholder="add an ingredient manually">
+      <button type="submit">Add</button>
+    </form>
+  </div>
+</section>
+
+<script>
+  (function () {
+    if (window.__onboardInit) return;
+    window.__onboardInit = true;
+
+    window.__autoGrow = function (el) {
+      el.style.height = 'auto';
+      el.style.height = Math.min(el.scrollHeight, 220) + 'px';
+    };
+
+    // Remove the empty-state <li> when an item is added.
+    window.__clearEmpty = function (id) {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    };
+
+    // After an import submission, clear the textarea and refresh the
+    // blacklist list (the server returns an OOB swap for #blacklist-list).
+    window.__onboardSubmit = function (form) {
+      // Let htmx handle the request; clear the input on the next tick.
+      setTimeout(function () {
+        const ta = document.getElementById('onboard-input');
+        if (ta) { ta.value = ''; window.__autoGrow(ta); ta.focus(); }
+      }, 0);
+    };
+
+    const ta = document.getElementById('onboard-input');
+    if (ta) window.__autoGrow(ta);
+  })();
+</script>
+{{end}}

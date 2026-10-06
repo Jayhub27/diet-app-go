@@ -37,6 +37,7 @@ type RunOptions struct {
 	// OnToken is called for every assistant content delta in a streaming
 	// response. nil = no streaming (the agent still works without it).
 	// MVP: not used; agent runs non-streaming and returns the full reply.
+	OnToken func(delta string)
 }
 
 // Result is what the agent returns after the loop.
@@ -74,69 +75,135 @@ func (a *Agent) Run(ctx context.Context, opts RunOptions) (*Result, error) {
 
 	res := &Result{ToolHit: make(map[string]int)}
 	for step := 0; step < a.MaxSteps; step++ {
-		resp, err := a.Client.Chat(ctx, provider.ChatRequest{
+		req := provider.ChatRequest{
 			Model:    a.Model,
 			Messages: msgs,
 			Tools:    schemas,
-		})
-		if err != nil {
-			return res, fmt.Errorf("llm call: %w", err)
-		}
-		if resp.Error != nil {
-			return res, fmt.Errorf("llm error: %s", resp.Error.Message)
-		}
-		if len(resp.Choices) == 0 {
-			return res, fmt.Errorf("llm returned no choices")
-		}
-		choice := resp.Choices[0].Message
-		res.Steps++
-
-		// If no tool calls, this is the final reply.
-		if len(choice.ToolCalls) == 0 {
-			res.Reply = choice.Content
-			res.Trace = append(res.Trace, Step{Kind: "assistant", Text: choice.Content})
-			return res, nil
 		}
 
-		// Append assistant message with tool_calls (so the model sees its own
-		// call in the next turn).
-		msgs = append(msgs, choice)
-		res.Trace = append(res.Trace, Step{Kind: "assistant", Text: choice.Content})
-
-		// Execute each tool call, append a "tool" message per call.
-		for _, tc := range choice.ToolCalls {
-			name := tc.Function.Name
-			args := tc.Function.Arguments
-			t, ok := byName[name]
-			step := Step{Kind: "tool", ToolName: name, ToolArgs: args}
-			res.ToolHit[name]++
-			if !ok {
-				step.ToolErr = fmt.Sprintf("unknown tool: %s", name)
-				step.ToolOut = step.ToolErr
-			} else {
-				if opts.OnToolCall != nil {
-					opts.OnToolCall(name, args)
-				}
-				out, err := t.Run(ctx, json.RawMessage(args))
-				if err != nil {
-					step.ToolErr = err.Error()
-					step.ToolOut = err.Error()
-				} else {
-					step.ToolOut = out
-				}
+		// Non-streaming path (default).
+		if opts.OnToken == nil {
+			resp, err := a.Client.Chat(ctx, req)
+			if err != nil {
+				return res, fmt.Errorf("llm call: %w", err)
 			}
-			res.Trace = append(res.Trace, step)
-			msgs = append(msgs, provider.Message{
-				Role:       "tool",
-				ToolCallID: tc.ID,
-				Name:       name,
-				Content:    step.ToolOut,
-			})
+			if resp.Error != nil {
+				return res, fmt.Errorf("llm error: %s", resp.Error.Message)
+			}
+			if len(resp.Choices) == 0 {
+				return res, fmt.Errorf("llm returned no choices")
+			}
+			choice := resp.Choices[0].Message
+			res.Steps++
+			if len(choice.ToolCalls) == 0 {
+				res.Reply = choice.Content
+				res.Trace = append(res.Trace, Step{Kind: "assistant", Text: choice.Content})
+				return res, nil
+			}
+			msgs = append(msgs, choice)
+			res.Trace = append(res.Trace, Step{Kind: "assistant", Text: choice.Content})
+			if err := executeToolCalls(ctx, a, byName, choice, opts, res, &msgs); err != nil {
+				return res, err
+			}
+			continue
 		}
+
+		// Streaming path: stream tokens, accumulate the full reply.
+		var streamed strings.Builder
+		var finalToolCalls []provider.ToolCall
+		streamErr := a.Client.ChatStream(ctx, req, func(chunk provider.StreamChunk) {
+			if chunk.Error != "" {
+				return
+			}
+			if chunk.Delta != "" {
+				streamed.WriteString(chunk.Delta)
+				opts.OnToken(chunk.Delta)
+			}
+			if chunk.Done {
+				finalToolCalls = chunk.ToolCalls
+			}
+		})
+		if streamErr != nil {
+			return res, fmt.Errorf("llm call: %w", streamErr)
+		}
+		res.Steps++
+		full := streamed.String()
+
+		// OpenAI-style streamed tool calls (final chunk carries them).
+		if len(finalToolCalls) > 0 {
+			choice := provider.Message{Role: "assistant", Content: full, ToolCalls: finalToolCalls}
+			msgs = append(msgs, choice)
+			res.Trace = append(res.Trace, Step{Kind: "assistant", Text: full})
+			if err := executeToolCalls(ctx, a, byName, choice, opts, res, &msgs); err != nil {
+				return res, err
+			}
+			continue
+		}
+
+		// Local models emit tool calls as [[TOOL_CALL]] markup inside the text.
+		if len(req.Tools) > 0 {
+			if parsed, cleaned := provider.ParseToolCallsFromText(full); len(parsed) > 0 {
+				choice := provider.Message{Role: "assistant", Content: cleaned, ToolCalls: parsed}
+				msgs = append(msgs, choice)
+				res.Trace = append(res.Trace, Step{Kind: "assistant", Text: cleaned})
+				if err := executeToolCalls(ctx, a, byName, choice, opts, res, &msgs); err != nil {
+					return res, err
+				}
+				continue
+			}
+		}
+
+		// No tool calls → final reply.
+		res.Reply = full
+		res.Trace = append(res.Trace, Step{Kind: "assistant", Text: full})
+		return res, nil
 	}
+
 	// Hit the step cap; surface what we have.
 	res.Reply = "I ran out of steps before I could finish. Try a simpler request or a faster model."
 	return res, nil
+}
+
+// executeToolCalls runs every tool call on the assistant message, appends the
+// results as "tool" messages, and records them in the trace. It mutates msgs.
+func executeToolCalls(ctx context.Context, a *Agent, byName map[string]*tools.Tool,
+	choice provider.Message, opts RunOptions, res *Result, msgs *[]provider.Message) error {
+
+	// Append assistant message with tool_calls (so the model sees its own
+	// call in the next turn).
+	*msgs = append(*msgs, choice)
+	res.Trace = append(res.Trace, Step{Kind: "assistant", Text: choice.Content})
+
+	for _, tc := range choice.ToolCalls {
+		name := tc.Function.Name
+		args := tc.Function.Arguments
+		t, ok := byName[name]
+		step := Step{Kind: "tool", ToolName: name, ToolArgs: args}
+		res.ToolHit[name]++
+		if !ok {
+			step.ToolErr = fmt.Sprintf("unknown tool: %s", name)
+			step.ToolOut = step.ToolErr
+		} else {
+			if opts.OnToolCall != nil {
+				opts.OnToolCall(name, args)
+			}
+			out, err := t.Run(ctx, json.RawMessage(args))
+			if err != nil {
+				step.ToolErr = err.Error()
+				step.ToolOut = err.Error()
+			} else {
+				step.ToolOut = out
+			}
+		}
+		res.Trace = append(res.Trace, step)
+		*msgs = append(*msgs, provider.Message{
+			Role:       "tool",
+			ToolCallID: tc.ID,
+			Name:       name,
+			Content:    step.ToolOut,
+		})
+	}
+	return nil
 }
 
 func buildSchemas(ts []*tools.Tool) []provider.Tool {
@@ -188,7 +255,13 @@ Pantry tools:
 - remove_from_pantry: when user says "remove X" or "I used up Y"
 - list_pantry: when user asks "what's in my pantry?"
 - save_recipe_to_library: when user says "save this recipe"
-- Do NOT modify dietary profile or restrictions — that's manual on /profile.`
+- Do NOT modify dietary profile or restrictions — that's manual on /profile.
+
+Blacklist tools:
+- add_to_blacklist: when the user describes allergies, intolerances, or foods
+  they can't or won't eat. Extract concrete ingredient names and add them.
+- remove_from_blacklist: when the user says they can now eat something or wants
+  it off the blacklist.`
 
 // BuildContextBlock appends a human-readable context block to the system
 // prompt. Mirrors the TS buildContextBlock helper.

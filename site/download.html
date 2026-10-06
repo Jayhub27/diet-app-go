@@ -99,6 +99,16 @@
               <a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-windows-amd64.exe" class="btn btn-ghost">Portable (.exe)</a>
             </div>
           </article>
+
+          <article class="platform-card" data-platform="android">
+            <div class="platform-card-icon">&#x1F916;</div>
+            <h3>Android</h3>
+            <p>Native client for your self-hosted server. Scan ingredients with your camera.</p>
+            <div class="platform-downloads">
+              <a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-android.apk" class="btn btn-primary">Download APK</a>
+              <a href="https://github.com/Jayhub27/diet-app-go/tree/master/android" class="btn btn-ghost">Build from source</a>
+            </div>
+          </article>
         </div>
       </div>
     </section>
@@ -114,6 +124,7 @@
           <button class="tab-btn active" data-tab="macos">macOS</button>
           <button class="tab-btn" data-tab="linux">Linux</button>
           <button class="tab-btn" data-tab="windows">Windows</button>
+          <button class="tab-btn" data-tab="android">Android</button>
           <button class="tab-btn" data-tab="docker">Docker</button>
         </div>
 
@@ -190,6 +201,28 @@ sudo systemctl enable --now dietapp</code></pre>
             <h3>Or: Scoop package manager</h3>
             <pre><code>scoop bucket add dietapp https://github.com/Jayhub27/diet-app-go
 scoop install dietapp</code></pre>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-android">
+          <div class="install-step">
+            <h3>1. Run the server</h3>
+            <p>The Android app connects to a DietApp server you run yourself. Install it on any machine on your network using the macOS, Linux, Windows, or Docker instructions.</p>
+          </div>
+          <div class="install-step">
+            <h3>2. Install the APK</h3>
+            <p>Download <a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-android.apk">dietapp-android.apk</a> on your phone and open it. Android will ask you to allow installs from your browser &mdash; approve it.</p>
+          </div>
+          <div class="install-step">
+            <h3>3. Enter your server URL</h3>
+            <p>On first launch the app asks for your server address, e.g. <code>http://192.168.1.100:8080</code>. Find your server's LAN IP with <code>ip addr</code> (Linux) or <code>ipconfig</code> (Windows). Your phone must be on the same network.</p>
+            <p class="install-note">Once connected, everything works &mdash; including the camera-powered ingredient scanner.</p>
+          </div>
+          <div class="install-step">
+            <h3>Or: build from source</h3>
+            <pre><code>git clone https://github.com/Jayhub27/diet-app-go
+cd diet-app-go/android
+# Open in Android Studio, then Run &#9654;</code></pre>
           </div>
         </div>
 
@@ -309,7 +342,13 @@ scoop install dietapp</code></pre>
       var platformDesc = 'Download the Linux binary for your system.';
       var downloadUrl = 'https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-amd64';
 
-      if (ua.indexOf('mac') !== -1) {
+      if (ua.indexOf('android') !== -1) {
+        platform = 'android';
+        platformName = 'Android';
+        platformDesc = 'Native app for your self-hosted server, with camera scanning.';
+        downloadUrl = 'https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-android.apk';
+        document.getElementById('platform-icon').textContent = '🤖';
+      } else if (ua.indexOf('mac') !== -1) {
         platform = 'macos';
         platformName = 'macOS';
         platformDesc = 'Universal binary for Intel and Apple Silicon.';
