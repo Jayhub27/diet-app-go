@@ -10,14 +10,36 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/orionryan/diet-app-go/internal/ai/provider"
+	"github.com/orionryan/diet-app-go/internal/ai/tools"
 	"github.com/orionryan/diet-app-go/internal/auth"
 )
 
 // scanIngredient is one extracted ingredient plus its blacklist match (if any).
 type scanIngredient struct {
-	Name    string
-	Match   string // blacklist entry this ingredient matched; empty = safe
+	Name     string
+	Match    string // blacklist entry this ingredient matched; empty = safe
 	Conflict bool
+}
+
+// scanProduct is a barcode-matched product rendered on the scan page.
+type scanProduct struct {
+	Name        string
+	Brand       string
+	ImageURL    string
+	URL         string
+	Verdict     string // safe | check | unsafe
+	VerdictText string
+	Violations  []scanProductViolation
+	Notes       []string
+	Ingredients string
+	Allergens   string
+	Traces      string
+	Stores      string
+}
+
+type scanProductViolation struct {
+	Detail   string
+	Severity string
 }
 
 // ScanPage renders the ingredient-scanner UI.
@@ -94,11 +116,23 @@ func (h *Handlers) ScanIngredients(c echo.Context) error {
 	for _, b := range blacklist {
 		blNames = append(blNames, b.Ingredient)
 	}
+	restrictionRows, err := h.loadRestrictions(ctx, u.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	rs := make([]tools.Restriction, 0, len(restrictionRows))
+	for _, r := range restrictionRows {
+		rs = append(rs, tools.Restriction{Name: r.Restriction, Severity: tools.Severity(r.Severity)})
+	}
 
 	src, model, apiKey, baseURL := h.resolveProvider(settings)
 
-	const scanPrompt = `List every ingredient you can identify in this image. If it shows a food label, read the full ingredients list. If it shows a meal or product photo, identify the visible ingredients.
-Return ONLY a JSON array of ingredient names as lowercase strings, e.g. ["wheat flour","sugar","palm oil"]. No prose, no markdown, no explanation.`
+	const scanPrompt = `Read this image and return ONLY a JSON object with two fields:
+- "barcode": the digits printed under a visible barcode (string, no spaces). If no barcode is visible, use "".
+- "ingredients": every ingredient you can identify, as lowercase strings. If the image shows a food label, read the full ingredients list; if it shows a meal or product photo, identify the visible ingredients.
+
+Example: {"barcode":"4006381333931","ingredients":["wheat flour","sugar","palm oil"]}
+No prose, no markdown, no explanation.`
 
 	// ---- call vision ----
 	var reply string
@@ -155,13 +189,31 @@ Return ONLY a JSON array of ingredient names as lowercase strings, e.g. ["wheat 
 		return h.renderScanError(c, "The model returned no reply. Try a clearer photo.")
 	}
 
-	// ---- parse the JSON ingredient list ----
-	ingredients := parseIngredientJSON(reply)
-	if len(ingredients) == 0 {
-		return h.renderScanError(c, "Couldn't extract any ingredients from that image. Try a sharper, well-lit photo of the label.")
+	// ---- parse the model output (barcode + ingredient list) ----
+	barcode, ingredients := parseScanResult(reply)
+
+	// ---- barcode path: look the product up and check it against the profile ----
+	var product *scanProduct
+	var barcodeNote string
+	if barcode != "" {
+		lookup := tools.LookupBarcodeProduct(barcode, rs, blNames)
+		switch lookup.Status {
+		case "found":
+			product = toScanProduct(lookup.Product)
+		case "not_found":
+			barcodeNote = "Barcode " + lookup.Barcode + " isn't in Open Food Facts — showing the ingredients read from the photo instead."
+		case "invalid_barcode":
+			barcodeNote = "The barcode digits couldn't be validated (a digit may be misread) — showing the ingredients read from the photo instead."
+		default:
+			barcodeNote = "Product data is unreachable right now — showing the ingredients read from the photo instead."
+		}
 	}
 
-	// ---- match against blacklist ----
+	if product == nil && len(ingredients) == 0 {
+		return h.renderScanError(c, "Couldn't extract any ingredients from that image. Try a sharper, well-lit photo of the label or barcode.")
+	}
+
+	// ---- match against blacklist (label-read path) ----
 	results := make([]scanIngredient, 0, len(ingredients))
 	conflicts := 0
 	for _, ing := range ingredients {
@@ -173,7 +225,71 @@ Return ONLY a JSON array of ingredient names as lowercase strings, e.g. ["wheat 
 		results = append(results, si)
 	}
 
-	return h.renderScanResults(c, results, conflicts)
+	return h.renderScanResults(c, results, conflicts, product, barcodeNote)
+}
+
+// parseScanResult extracts the barcode and ingredient list from model output.
+// The current prompt asks for {"barcode": "...", "ingredients": [...]};
+// older/array-shaped replies fall back to the plain ingredient parser.
+func parseScanResult(reply string) (string, []string) {
+	start := strings.Index(reply, "{")
+	end := strings.LastIndex(reply, "}")
+	if start >= 0 && end > start {
+		var out struct {
+			Barcode     string   `json:"barcode"`
+			Ingredients []string `json:"ingredients"`
+		}
+		if err := json.Unmarshal([]byte(reply[start:end+1]), &out); err == nil {
+			return strings.TrimSpace(out.Barcode), cleanIngredients(out.Ingredients)
+		}
+	}
+	return "", parseIngredientJSON(reply)
+}
+
+func toScanProduct(p *tools.EvaluatedProduct) *scanProduct {
+	if p == nil {
+		return nil
+	}
+	verdictText := map[string]string{
+		"safe":   "Fits your restrictions — no conflicts found in the label data.",
+		"check":  "Check the label before buying — some data couldn't be verified.",
+		"unsafe": "Conflicts with your restrictions or blacklist. Avoid it.",
+	}[p.Verdict]
+	if verdictText == "" {
+		verdictText = "Fit could not be determined — check the label."
+	}
+	violations := make([]scanProductViolation, 0, len(p.Violations))
+	for _, v := range p.Violations {
+		violations = append(violations, scanProductViolation{Detail: v.Detail, Severity: string(v.Severity)})
+	}
+	return &scanProduct{
+		Name:        p.Name,
+		Brand:       p.Brand,
+		ImageURL:    p.ImageURL,
+		URL:         p.URL,
+		Verdict:     p.Verdict,
+		VerdictText: verdictText,
+		Violations:  violations,
+		Notes:       p.Notes,
+		Ingredients: p.IngredientsText,
+		Allergens:   beautifyTags(p.Allergens),
+		Traces:      beautifyTags(p.Traces),
+		Stores:      p.Stores,
+	}
+}
+
+// beautifyTags turns raw OFF tags ("en:no-gluten") into readable text
+// ("no gluten") for the scan page.
+func beautifyTags(tags []string) string {
+	out := make([]string, 0, len(tags))
+	for _, t := range tags {
+		t = strings.ToLower(t)
+		if len(t) >= 3 && t[2] == ':' {
+			t = t[3:]
+		}
+		out = append(out, strings.ReplaceAll(t, "-", " "))
+	}
+	return strings.Join(out, ", ")
 }
 
 // parseIngredientJSON extracts a JSON string array from model output. Models
@@ -255,11 +371,13 @@ func stemToken(s string) string {
 	return strings.Join(toks, " ")
 }
 
-func (h *Handlers) renderScanResults(c echo.Context, ingredients []scanIngredient, conflicts int) error {
+func (h *Handlers) renderScanResults(c echo.Context, ingredients []scanIngredient, conflicts int, product *scanProduct, barcodeNote string) error {
 	c.Response().Writer.Header().Set("Content-Type", "text/html; charset=utf-8")
 	return h.Templates.RenderPartial(c.Response().Writer, "partials/scan_results.html", map[string]any{
 		"Ingredients": ingredients,
 		"Conflicts":   conflicts,
+		"Product":     product,
+		"BarcodeNote": barcodeNote,
 	})
 }
 

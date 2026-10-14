@@ -44,5 +44,11 @@ Open **Scan** in the nav. Tapping "Take photo" or "Choose image" opens the
 native camera/gallery picker. The photo is uploaded to your server, the vision
 model extracts ingredients, and anything on your blacklist is flagged in red.
 
+If the photo shows a **barcode**, the digits printed under the bars are read
+too. The server looks the product up on Open Food Facts and shows its
+ingredient list, allergens and a fit verdict against your restrictions and
+blacklist — falling back to the label-read ingredient list when the code
+isn't in the database.
+
 Requires a vision-capable model configured on the server (a local vision model
 via /models, or a cloud vision model like gpt-4o via /profile).

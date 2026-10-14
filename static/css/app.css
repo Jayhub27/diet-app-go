@@ -647,3 +647,61 @@ section > form { margin-bottom: 1rem; }
   color: var(--destructive);
   opacity: 0.85;
 }
+
+.scan-verdict--warn {
+  background: color-mix(in oklch, #d97706 12%, transparent);
+  border: 1px solid color-mix(in oklch, #d97706 32%, transparent);
+  color: #b45309;
+}
+:root.dark .scan-verdict--warn { color: #fbbf24; }
+
+.alert--info {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--muted-foreground);
+}
+
+/* ---------- scanned product card ---------- */
+.scan-product {
+  display: flex;
+  gap: 0.85rem;
+  align-items: center;
+  margin-bottom: 0.9rem;
+}
+.scan-product__img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: calc(var(--radius) * 0.8);
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+.scan-product__meta { display: flex; flex-direction: column; gap: 0.15rem; }
+.scan-product__name { font-size: 1.05rem; }
+.scan-product__brand { color: var(--muted-foreground); font-size: 0.85rem; }
+.scan-product__violations {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+}
+.scan-product__severity {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.8;
+}
+.scan-product__note { font-size: 0.85rem; margin: 0.4rem 0 0; }
+.scan-product__ingredients {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 0.8);
+  padding: 0.7rem 0.9rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.scan-product__allergens { font-size: 0.85rem; color: var(--muted-foreground); margin: 0.5rem 0 0; }
+.scan-product__source { font-size: 0.8rem; color: var(--muted-foreground); margin: 0.75rem 0 0; }

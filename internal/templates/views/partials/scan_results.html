@@ -3,39 +3,79 @@
   {{if .Error}}
     <div class="alert">{{.Error}}</div>
   {{else}}
-    {{if .Conflicts}}
-      <div class="scan-verdict scan-verdict--conflict">
-        <span class="scan-verdict__icon" aria-hidden="true">⚠️</span>
-        <div>
-          <strong>{{.Conflicts}} blacklisted ingredient{{if gt .Conflicts 1}}s{{end}} found</strong>
-          <p>This product conflicts with your blacklist. Avoid it.</p>
-        </div>
-      </div>
-    {{else}}
-      <div class="scan-verdict scan-verdict--safe">
-        <span class="scan-verdict__icon" aria-hidden="true">✓</span>
-        <div>
-          <strong>No blacklisted ingredients found</strong>
-          <p>Nothing on your blacklist appears in this product.</p>
-        </div>
-      </div>
-    {{end}}
-
-    <h3>Detected ingredients ({{len .Ingredients}})</h3>
-    <ul class="scan-ingredients">
-      {{range .Ingredients}}
-        {{if .Conflict}}
-          <li class="scan-ingredient scan-ingredient--conflict">
-            <span class="scan-ingredient__name">{{.Name}}</span>
-            <span class="scan-ingredient__match">matches blacklist: {{.Match}}</span>
-          </li>
-        {{else}}
-          <li class="scan-ingredient">
-            <span class="scan-ingredient__name">{{.Name}}</span>
-          </li>
+    {{if .Product}}
+      <div class="scan-product">
+        {{if .Product.ImageURL}}
+          <img class="scan-product__img" src="{{.Product.ImageURL}}" alt="" loading="lazy">
         {{end}}
+        <div class="scan-product__meta">
+          <strong class="scan-product__name">{{.Product.Name}}</strong>
+          {{if .Product.Brand}}<span class="scan-product__brand">{{.Product.Brand}}</span>{{end}}
+        </div>
+      </div>
+
+      <div class="scan-verdict {{if eq .Product.Verdict "unsafe"}}scan-verdict--conflict{{else if eq .Product.Verdict "check"}}scan-verdict--warn{{else}}scan-verdict--safe{{end}}">
+        <span class="scan-verdict__icon" aria-hidden="true">{{if eq .Product.Verdict "unsafe"}}⚠️{{else if eq .Product.Verdict "check"}}❓{{else}}✓{{end}}</span>
+        <div>
+          <strong>{{.Product.VerdictText}}</strong>
+          {{if .Product.Violations}}
+            <ul class="scan-product__violations">
+              {{range .Product.Violations}}
+                <li>{{.Detail}} <span class="scan-product__severity">{{.Severity}}</span></li>
+              {{end}}
+            </ul>
+          {{end}}
+          {{range .Product.Notes}}
+            <p class="scan-product__note">{{.}}</p>
+          {{end}}
+        </div>
+      </div>
+
+      <h3>Product ingredients</h3>
+      <p class="scan-product__ingredients">{{if .Product.Ingredients}}{{.Product.Ingredients}}{{else}}No ingredient list on file — check the package.{{end}}</p>
+      {{if .Product.Allergens}}<p class="scan-product__allergens"><strong>Contains:</strong> {{.Product.Allergens}}</p>{{end}}
+      {{if .Product.Traces}}<p class="scan-product__allergens"><strong>May contain:</strong> {{.Product.Traces}}</p>{{end}}
+      {{if .Product.Stores}}<p class="scan-product__allergens"><strong>Sighted at:</strong> {{.Product.Stores}}</p>{{end}}
+      <p class="scan-product__source"><a href="{{.Product.URL}}" target="_blank" rel="noopener noreferrer">Open Food Facts</a> · community data — always double-check the packaging.</p>
+    {{else}}
+      {{if .BarcodeNote}}
+        <div class="alert alert--info">{{.BarcodeNote}}</div>
       {{end}}
-    </ul>
+
+      {{if .Conflicts}}
+        <div class="scan-verdict scan-verdict--conflict">
+          <span class="scan-verdict__icon" aria-hidden="true">⚠️</span>
+          <div>
+            <strong>{{.Conflicts}} blacklisted ingredient{{if gt .Conflicts 1}}s{{end}} found</strong>
+            <p>This product conflicts with your blacklist. Avoid it.</p>
+          </div>
+        </div>
+      {{else}}
+        <div class="scan-verdict scan-verdict--safe">
+          <span class="scan-verdict__icon" aria-hidden="true">✓</span>
+          <div>
+            <strong>No blacklisted ingredients found</strong>
+            <p>Nothing on your blacklist appears in this product.</p>
+          </div>
+        </div>
+      {{end}}
+
+      <h3>Detected ingredients ({{len .Ingredients}})</h3>
+      <ul class="scan-ingredients">
+        {{range .Ingredients}}
+          {{if .Conflict}}
+            <li class="scan-ingredient scan-ingredient--conflict">
+              <span class="scan-ingredient__name">{{.Name}}</span>
+              <span class="scan-ingredient__match">matches blacklist: {{.Match}}</span>
+            </li>
+          {{else}}
+            <li class="scan-ingredient">
+              <span class="scan-ingredient__name">{{.Name}}</span>
+            </li>
+          {{end}}
+        {{end}}
+      </ul>
+    {{end}}
   {{end}}
 </div>
 {{end}}

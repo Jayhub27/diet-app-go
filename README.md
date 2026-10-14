@@ -21,7 +21,8 @@ internal/
   auth/                       # bcrypt, sessions, middleware
   ratelimit/                  # in-memory sliding-window limiter
   ai/provider/                # OpenAI-compatible client
-  ai/tools/                   # compute_nutrition, search_ingredients, apply_restrictions
+  ai/tools/                   # compute_nutrition, search_ingredients, apply_restrictions,
+                              # find_products + lookup_product_by_barcode (Open Food Facts)
   ai/agent.go                 # tool-calling loop
   handlers/                   # echo handlers (auth, chat, crud)
   templates/                  # html/template engine
