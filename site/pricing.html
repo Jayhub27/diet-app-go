@@ -3,485 +3,270 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="DietApp pricing. Free and open source, with optional managed hosting for teams.">
+  <meta name="description" content="DietApp pricing — free and open source self-hosted. You only pay for the AI provider you choose, or run local models for free.">
   <meta name="color-scheme" content="light dark">
   <title>Pricing — DietApp</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%2317604a'/><path d='M12 19c-2.7-1.4-4.5-4-4.5-7.2A4.5 4.5 0 0 1 12 7.3a4.5 4.5 0 0 1 4.5 4.5c0 3.2-1.8 5.8-4.5 7.2z' fill='%23fdfbf6'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;550;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/site.css">
   <script>
-    (function(){
-      var s=localStorage.getItem('dietapp-theme');
-      var p=window.matchMedia('(prefers-color-scheme:dark)').matches;
-      if(s==='dark'||(!s&&p))document.documentElement.classList.add('dark');
+    (function () {
+      var t = localStorage.getItem("dietapp-site-theme");
+      if (t === "dark" || (!t && matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.classList.add("dark");
+      }
     })();
   </script>
 </head>
 <body>
-  <header class="site-header" id="header">
-    <div class="container header-inner">
-      <a href="/" class="brand">
-        <span class="brand-icon" aria-hidden="true">&#x1F957;</span>
-        <span>DietApp</span>
-      </a>
-      <nav class="nav" id="nav">
-        <a href="/#features">Features</a>
-        <a href="/#how-it-works">How it works</a>
-        <a href="/#ai">AI Models</a>
-        <a href="/pricing.html">Pricing</a>
-        <a href="/download.html">Download</a>
-      </nav>
-      <div class="header-actions">
-        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
-          <span class="icon-sun">&#9728;</span>
-          <span class="icon-moon">&#9790;</span>
-        </button>
-        <a href="/download.html" class="btn btn-primary">Download</a>
-        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
-          <span></span><span></span><span></span>
-        </button>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.5 4.5l2 2M17.5 17.5l2 2M19.5 4.5l-2 2M6.5 17.5l-2 2"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></symbol>
+</svg>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a href="/" class="brand">
+      <span class="brand-mark">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 21c-4-2-7-6-7-11a7 7 0 0 1 14 0c0 5-3 9-7 11z" fill="currentColor"/></svg>
+      </span>
+      <span>DietApp</span>
+    </a>
+    <nav class="nav" id="nav" aria-label="Main">
+      <a href="index.html#features">Features</a>
+      <a href="index.html#how-it-works">How it works</a>
+      <a href="index.html#ai">AI models</a>
+      <a href="index.html#faq">FAQ</a>
+    </nav>
+    <div class="header-actions">
+      <button class="icon-btn" id="theme-toggle" aria-label="Switch theme" title="Switch theme">
+        <svg class="theme-icon-light" width="17" height="17"><use href="#i-moon"/></svg>
+        <svg class="theme-icon-dark" width="17" height="17" style="display:none"><use href="#i-sun"/></svg>
+      </button>
+      <a href="download.html" class="btn btn-primary">Download</a>
+      <button class="icon-btn nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="section" style="border-top:0;padding-top:56px">
+    <div class="wrap">
+      <p class="eyebrow">Pricing</p>
+      <h1 class="display" style="font-size:clamp(2.2rem,4.4vw,3.2rem);margin:10px 0 12px">Free forever. Pay only for AI.</h1>
+      <p class="lede" style="max-width:56ch">Open source and free to self-host, with local AI and your own machine doing the work. Want us to run it? The cloud version is $5/month with more AI queries — same restriction checks either way.</p>
+
+      <div class="plan-grid">
+        <article class="plan card">
+          <h3>Self-Hosted</h3>
+          <p class="muted" style="margin:0;font-size:13.5px">Run DietApp on your own machine. Full control, full privacy.</p>
+          <div class="price">$0 <span>forever</span></div>
+          <ul>
+            <li>Real-time blacklist &amp; label checks</li>
+            <li>AI meal planning for your restrictions</li>
+            <li>Local SQLite database — your data stays yours</li>
+            <li>No accounts, no telemetry — nothing to sign up for</li>
+            <li>Choose any AI provider — BYO key, no markup</li>
+            <li>Community support</li>
+          </ul>
+          <a class="btn btn-primary" href="download.html" style="justify-content:center">Download free</a>
+        </article>
+
+        <article class="plan card featured">
+          <span class="badge">No setup</span>
+          <h3>Cloud</h3>
+          <p class="muted" style="margin:0;font-size:13.5px">We host DietApp for you, with more AI queries each day.</p>
+          <div class="price">$5 <span>/ month</span></div>
+          <ul>
+            <li>Everything in Self-Hosted</li>
+            <li>More AI queries every day</li>
+            <li>No server to run — works from any browser</li>
+            <li>Managed AI keys, no provider setup</li>
+            <li>Privacy principle: your restrictions are never profiled or sold</li>
+            <li>Cancel anytime</li>
+          </ul>
+          <a class="btn btn-primary" href="https://github.com/Jayhub27/diet-app-go" rel="noopener noreferrer" style="justify-content:center">Get started</a>
+          <p class="fine">Free tier included — upgrade when you need more queries.</p>
+        </article>
       </div>
     </div>
-  </header>
+  </section>
 
-  <main>
-    <section class="pricing-hero">
-      <canvas id="three-canvas"></canvas>
-      <div class="container">
-        <div class="section-head">
-          <span class="eyebrow">Pricing</span>
-          <h1>Free forever. Pay only for AI.</h1>
-          <p class="section-sub">DietApp is open source and self-hosted. You only pay for the AI provider you choose to use.</p>
-        </div>
-
-        <div class="pricing-grid">
-          <article class="pricing-card">
-            <div class="pricing-header">
-              <h3>Self-Hosted</h3>
-              <div class="pricing-price">
-                <span class="price-amount">$0</span>
-                <span class="price-period">forever</span>
-              </div>
-              <p class="pricing-desc">Run DietApp on your own machine. Full control, full privacy.</p>
-            </div>
-            <ul class="pricing-features">
-              <li><span class="check">&#x2713;</span> Unlimited users</li>
-              <li><span class="check">&#x2713;</span> All features included</li>
-              <li><span class="check">&#x2713;</span> Local SQLite database</li>
-              <li><span class="check">&#x2713;</span> Choose any AI provider</li>
-              <li><span class="check">&#x2713;</span> Run offline with Ollama/LM Studio</li>
-              <li><span class="check">&#x2713;</span> Community support</li>
-            </ul>
-            <div class="pricing-cta">
-              <a href="/download.html" class="btn btn-primary btn-lg">Download free</a>
-            </div>
-          </article>
-
-          <article class="pricing-card pricing-card--featured">
-            <div class="pricing-badge">Most Popular</div>
-            <div class="pricing-header">
-              <h3>Managed Hosting</h3>
-              <div class="pricing-price">
-                <span class="price-amount">$9</span>
-                <span class="price-period">/month</span>
-              </div>
-              <p class="pricing-desc">We host DietApp for you. No setup, no maintenance.</p>
-            </div>
-            <ul class="pricing-features">
-              <li><span class="check">&#x2713;</span> Everything in Self-Hosted</li>
-              <li><span class="check">&#x2713;</span> Automatic updates</li>
-              <li><span class="check">&#x2713;</span> Daily backups</li>
-              <li><span class="check">&#x2713;</span> Custom domain support</li>
-              <li><span class="check">&#x2713;</span> Priority email support</li>
-              <li><span class="check">&#x2713;</span> 99.9% uptime SLA</li>
-            </ul>
-            <div class="pricing-cta">
-              <a href="#" class="btn btn-primary btn-lg">Start free trial</a>
-              <p class="pricing-note">14-day free trial, no credit card required</p>
-            </div>
-          </article>
-        </div>
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">AI provider costs</p>
+        <h2 class="display">What you'll pay for AI.</h2>
+        <p class="lede">DietApp works with multiple providers. Here's what each one costs.</p>
       </div>
-    </section>
-
-    <section class="ai-costs">
-      <div class="container">
-        <div class="section-head">
-          <span class="eyebrow">AI Provider Costs</span>
-          <h2>What you'll pay for AI</h2>
-          <p class="section-sub">DietApp works with multiple AI providers. Here's what they cost.</p>
-        </div>
-
-        <div class="ai-costs-grid">
-          <article class="ai-cost-card">
-            <div class="ai-cost-header">
-              <h3>Ollama</h3>
-              <span class="ai-cost-badge ai-cost-badge--free">Free</span>
-            </div>
-            <p>Run AI models locally on your machine. No API keys, no costs, complete privacy.</p>
-            <ul class="ai-cost-details">
-              <li><strong>Cost:</strong> $0</li>
-              <li><strong>Models:</strong> Llama 3, Mistral, Qwen, and more</li>
-              <li><strong>Requirements:</strong> 8GB+ RAM recommended</li>
-              <li><strong>Best for:</strong> Privacy-focused users, offline use</li>
-            </ul>
-          </article>
-
-          <article class="ai-cost-card">
-            <div class="ai-cost-header">
-              <h3>LM Studio</h3>
-              <span class="ai-cost-badge ai-cost-badge--free">Free</span>
-            </div>
-            <p>Desktop app for running local AI models with a friendly GUI.</p>
-            <ul class="ai-cost-details">
-              <li><strong>Cost:</strong> $0</li>
-              <li><strong>Models:</strong> Any GGUF format model</li>
-              <li><strong>Requirements:</strong> 8GB+ RAM recommended</li>
-              <li><strong>Best for:</strong> Users who prefer a GUI over CLI</li>
-            </ul>
-          </article>
-
-          <article class="ai-cost-card">
-            <div class="ai-cost-header">
-              <h3>OpenRouter</h3>
-              <span class="ai-cost-badge ai-cost-badge--paid">Pay-as-you-go</span>
-            </div>
-            <p>One API key, access to hundreds of models from multiple providers.</p>
-            <ul class="ai-cost-details">
-              <li><strong>Cost:</strong> ~$0.01-0.10 per conversation</li>
-              <li><strong>Models:</strong> Claude, GPT-4, Llama, and 100+ more</li>
-              <li><strong>Requirements:</strong> API key from openrouter.ai</li>
-              <li><strong>Best for:</strong> Flexibility, trying different models</li>
-            </ul>
-          </article>
-
-          <article class="ai-cost-card">
-            <div class="ai-cost-header">
-              <h3>OpenAI</h3>
-              <span class="ai-cost-badge ai-cost-badge--paid">Pay-as-you-go</span>
-            </div>
-            <p>Direct access to GPT-4o and other OpenAI models.</p>
-            <ul class="ai-cost-details">
-              <li><strong>Cost:</strong> ~$0.05-0.15 per conversation</li>
-              <li><strong>Models:</strong> GPT-4o, GPT-4o-mini, o1-preview</li>
-              <li><strong>Requirements:</strong> API key from platform.openai.com</li>
-              <li><strong>Best for:</strong> Best-in-class performance</li>
-            </ul>
-          </article>
-        </div>
-
-        <div class="ai-cost-note">
-          <p><strong>Typical usage:</strong> Most users spend $2-10/month on AI costs with cloud providers. Local providers (Ollama, LM Studio) are completely free but require more RAM.</p>
-        </div>
+      <div class="ai-cost-grid">
+        <article class="ai-cost card">
+          <span class="cost">$0 · local</span>
+          <h3>Ollama</h3>
+          <p>Run models locally. No API keys, no costs, complete privacy.</p>
+          <dl>
+            <div><dt>Models</dt><dd>Llama 3, Mistral, Qwen, and more</dd></div>
+            <div><dt>Requirements</dt><dd>8 GB+ RAM recommended</dd></div>
+            <div><dt>Best for</dt><dd>Privacy-focused users, offline use</dd></div>
+          </dl>
+        </article>
+        <article class="ai-cost card">
+          <span class="cost">$0 · local</span>
+          <h3>LM Studio</h3>
+          <p>A friendly GUI for running local models on your desktop.</p>
+          <dl>
+            <div><dt>Models</dt><dd>Any GGUF format model</dd></div>
+            <div><dt>Requirements</dt><dd>8 GB+ RAM recommended</dd></div>
+            <div><dt>Best for</dt><dd>Users who prefer a GUI over CLI</dd></div>
+          </dl>
+        </article>
+        <article class="ai-cost card">
+          <span class="cost">Pay-as-you-go</span>
+          <h3>OpenRouter</h3>
+          <p>One API key, hundreds of models from many providers.</p>
+          <dl>
+            <div><dt>Cost</dt><dd>≈ $0.01–0.10 per conversation</dd></div>
+            <div><dt>Models</dt><dd>Claude, GPT-4, Llama, and 100+ more</dd></div>
+            <div><dt>Best for</dt><dd>Flexibility, trying different models</dd></div>
+          </dl>
+        </article>
+        <article class="ai-cost card">
+          <span class="cost">Pay-as-you-go</span>
+          <h3>OpenAI</h3>
+          <p>Direct access to GPT-4o and other OpenAI models.</p>
+          <dl>
+            <div><dt>Cost</dt><dd>≈ $0.05–0.15 per conversation</dd></div>
+            <div><dt>Models</dt><dd>GPT-4o, GPT-4o-mini, o-series</dd></div>
+            <div><dt>Best for</dt><dd>Best-in-class performance</dd></div>
+          </dl>
+        </article>
       </div>
-    </section>
-
-    <section class="comparison">
-      <div class="container">
-        <div class="section-head">
-          <span class="eyebrow">Compare Plans</span>
-          <h2>Feature comparison</h2>
-        </div>
-
-        <div class="comparison-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Feature</th>
-                <th>Self-Hosted</th>
-                <th>Managed</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>AI Chat & Recipes</td>
-                <td><span class="check">&#x2713;</span></td>
-                <td><span class="check">&#x2713;</span></td>
-              </tr>
-              <tr>
-                <td>Pantry Management</td>
-                <td><span class="check">&#x2713;</span></td>
-                <td><span class="check">&#x2713;</span></td>
-              </tr>
-              <tr>
-                <td>Recipe Library</td>
-                <td><span class="check">&#x2713;</span></td>
-                <td><span class="check">&#x2713;</span></td>
-              </tr>
-              <tr>
-                <td>Allergy Blacklist</td>
-                <td><span class="check">&#x2713;</span></td>
-                <td><span class="check">&#x2713;</span></td>
-              </tr>
-              <tr>
-                <td>Vision Mode</td>
-                <td><span class="check">&#x2713;</span></td>
-                <td><span class="check">&#x2713;</span></td>
-              </tr>
-              <tr>
-                <td>Weekly Meal Plans</td>
-                <td><span class="check">&#x2713;</span></td>
-                <td><span class="check">&#x2713;</span></td>
-              </tr>
-              <tr>
-                <td>Local AI Models</td>
-                <td><span class="check">&#x2713;</span></td>
-                <td><span class="check">&#x2713;</span></td>
-              </tr>
-              <tr>
-                <td>Automatic Updates</td>
-                <td><span class="cross">&#x2717;</span></td>
-                <td><span class="check">&#x2713;</span></td>
-              </tr>
-              <tr>
-                <td>Daily Backups</td>
-                <td><span class="cross">&#x2717;</span></td>
-                <td><span class="check">&#x2713;</span></td>
-              </tr>
-              <tr>
-                <td>Custom Domain</td>
-                <td><span class="cross">&#x2717;</span></td>
-                <td><span class="check">&#x2713;</span></td>
-              </tr>
-              <tr>
-                <td>Priority Support</td>
-                <td><span class="cross">&#x2717;</span></td>
-                <td><span class="check">&#x2713;</span></td>
-              </tr>
-              <tr>
-                <td>On-premise Deployment</td>
-                <td><span class="check">&#x2713;</span></td>
-                <td><span class="cross">&#x2717;</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section class="faq">
-      <div class="container">
-        <div class="section-head">
-          <span class="eyebrow">FAQ</span>
-          <h2>Pricing questions</h2>
-        </div>
-
-        <div class="faq-grid">
-          <details class="faq-item" open>
-            <summary>Is DietApp really free?</summary>
-            <p>Yes! The self-hosted version is completely free and open source. You only pay for the AI provider you choose to use (or $0 if you run local models like Ollama).</p>
-          </details>
-          <details class="faq-item">
-            <summary>What's included in managed hosting?</summary>
-            <p>We handle all the infrastructure: hosting, updates, backups, SSL certificates, and monitoring. You just sign up and start using DietApp. Your data is stored securely and backed up daily.</p>
-          </details>
-          <details class="faq-item">
-            <summary>Can I switch from self-hosted to managed?</summary>
-            <p>Absolutely. You can export your SQLite database from your self-hosted instance and import it into a managed account. We provide migration tools to make this seamless.</p>
-          </details>
-          <details class="faq-item">
-            <summary>Do you offer refunds?</summary>
-            <p>Yes. If you're not satisfied with managed hosting, we offer a full refund within 30 days. No questions asked.</p>
-          </details>
-          <details class="faq-item">
-            <summary>What payment methods do you accept?</summary>
-            <p>We accept all major credit cards, PayPal, and cryptocurrency (Bitcoin, Ethereum). Enterprise customers can also pay via invoice.</p>
-          </details>
-          <details class="faq-item">
-            <summary>Is there a discount for nonprofits or students?</summary>
-            <p>Yes! We offer 50% off managed hosting for verified nonprofits and students. Contact us with proof of status to get your discount code.</p>
-          </details>
-        </div>
-      </div>
-    </section>
-
-    <section class="cta">
-      <div class="container cta-inner">
-        <h2>Ready to get started?</h2>
-        <p>Download DietApp for free or start your managed hosting trial today.</p>
-        <div class="cta-actions">
-          <a href="/download.html" class="btn btn-primary btn-lg">Download free</a>
-          <a href="#" class="btn btn-ghost btn-lg">Start managed trial</a>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <div class="footer-brand">
-        <span class="brand-icon" aria-hidden="true">&#x1F957;</span>
-        <span>DietApp</span>
-      </div>
-      <div class="footer-links">
-        <a href="https://github.com/Jayhub27/diet-app-go">GitHub</a>
-        <a href="/#features">Features</a>
-        <a href="/download.html">Download</a>
-      </div>
-      <div class="footer-copy">&copy; 2026 DietApp. Open source.</div>
+      <p class="install-note">Typical usage: most people spend $2–10/month on cloud AI — and nothing at all on local models.</p>
     </div>
-  </footer>
+  </section>
 
-  <script>
-    (function () {
-      var toggle = document.getElementById('nav-toggle');
-      var nav = document.getElementById('nav');
-      toggle.addEventListener('click', function () {
-        var open = nav.classList.toggle('nav--open');
-        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      });
-      nav.querySelectorAll('a').forEach(function (a) {
-        a.addEventListener('click', function () {
-          nav.classList.remove('nav--open');
-          toggle.setAttribute('aria-expanded', 'false');
-        });
-      });
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Compare</p>
+        <h2 class="display">Feature comparison.</h2>
+      </div>
+      <div class="table-wrap card" style="padding:6px 10px">
+        <table class="compare">
+          <thead>
+            <tr><th scope="col">Feature</th><th scope="col">Self-Hosted</th><th scope="col">Managed</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Real-time blacklist checks</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Allergy &amp; restriction profiles</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Label &amp; fridge scanner</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>AI meal planning &amp; recipes</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Recipe library with diet tags</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Local AI models</td><td class="yes">✓</td><td class="yes">✓</td></tr>
+            <tr><td>Your data on your own device</td><td class="yes">✓</td><td class="no">—</td></tr>
+            <tr><td>More AI queries every day</td><td class="no">—</td><td class="yes">✓</td></tr>
+            <tr><td>No-setup hosting</td><td class="no">—</td><td class="yes">✓</td></tr>
+            <tr><td>On-premise deployment</td><td class="yes">✓</td><td class="no">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
-      var themeBtn = document.getElementById('theme-toggle');
-      themeBtn.addEventListener('click', function () {
-        var root = document.documentElement;
-        root.classList.toggle('dark');
-        localStorage.setItem('dietapp-theme', root.classList.contains('dark') ? 'dark' : 'light');
-      });
-    })();
-  </script>
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">FAQ</p>
+        <h2 class="display">Pricing questions.</h2>
+      </div>
+      <div class="faq-grid">
+        <details class="faq" open>
+          <summary>Is DietApp really free?</summary>
+          <p>Yes. The self-hosted version is completely free and open source. You only pay for the AI provider you choose — or $0 with local models like Ollama.</p>
+        </details>
+        <details class="faq">
+          <summary>What's included in Cloud?</summary>
+          <p>We run the server and the AI plumbing, with more queries each day and no setup at all. Same restriction checks, same blacklist — you just open a browser.</p>
+        </details>
+        <details class="faq">
+          <summary>Can I switch from self-hosted to Cloud?</summary>
+          <p>Yes. Export your SQLite database from your instance and import it into a cloud account — migration tools make this seamless.</p>
+        </details>
+        <details class="faq">
+          <summary>Do you offer refunds?</summary>
+          <p>If you're not satisfied with Cloud, we offer a full refund within 30 days. No questions asked.</p>
+        </details>
+        <details class="faq">
+          <summary>What payment methods do you accept?</summary>
+          <p>All major credit cards and PayPal. Enterprise customers can also pay via invoice.</p>
+        </details>
+        <details class="faq">
+          <summary>Discounts for nonprofits or students?</summary>
+          <p>Yes — 50% off managed hosting for verified nonprofits and students. Get in touch with proof of status for a discount code.</p>
+        </details>
+      </div>
+    </div>
+  </section>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script>
-    (function () {
-      var canvas = document.getElementById('three-canvas');
-      if (!canvas) return;
+  <section class="cta">
+    <div class="wrap cta-inner">
+      <p class="eyebrow">Get started</p>
+      <h2 class="display" style="margin-top:10px">Start with the free version.</h2>
+      <p class="lede">Download DietApp, point it at the AI you trust, and keep your data on your own machine.</p>
+      <div class="cta-actions">
+        <a href="download.html" class="btn btn-primary btn-lg">Download free</a>
+        <a href="index.html#features" class="btn btn-lg">See features</a>
+      </div>
+    </div>
+  </section>
+</main>
 
-      var scene = new THREE.Scene();
-      var camera = new THREE.PerspectiveCamera(60, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-      camera.position.z = 30;
+<footer class="site-footer">
+  <div class="wrap footer-inner">
+    <a href="/" class="brand" style="font-size:18px">
+      <span class="brand-mark" style="width:26px;height:26px">
+        <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 21c-4-2-7-6-7-11a7 7 0 0 1 14 0c0 5-3 9-7 11z" fill="currentColor"/></svg>
+      </span>
+      <span>DietApp</span>
+    </a>
+    <div class="footer-links">
+      <a href="https://github.com/Jayhub27/diet-app-go" rel="noopener noreferrer">GitHub</a>
+      <a href="index.html#features">Features</a>
+      <a href="download.html">Download</a>
+    </div>
+    <div class="footer-copy">© 2026 DietApp. Open source.</div>
+  </div>
+</footer>
 
-      var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-      renderer.setSize(canvas.clientWidth, canvas.clientHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+<script>
+  (function () {
+    var toggle = document.getElementById("nav-toggle");
+    var nav = document.getElementById("nav");
+    toggle.addEventListener("click", function () {
+      var open = nav.classList.toggle("nav--open");
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    });
 
-      var isDark = document.documentElement.classList.contains('dark');
-      var accentColor = new THREE.Color(0x4ade80);
-      var lineColor = new THREE.Color(isDark ? 0x4ade80 : 0x22c55e);
-
-      var particleCount = 120;
-      var positions = new Float32Array(particleCount * 3);
-      var velocities = [];
-      for (var i = 0; i < particleCount; i++) {
-        positions[i * 3] = (Math.random() - 0.5) * 60;
-        positions[i * 3 + 1] = (Math.random() - 0.5) * 40;
-        positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
-        velocities.push({
-          x: (Math.random() - 0.5) * 0.02,
-          y: (Math.random() - 0.5) * 0.02,
-          z: (Math.random() - 0.5) * 0.01
-        });
-      }
-
-      var geometry = new THREE.BufferGeometry();
-      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-      var material = new THREE.PointsMaterial({
-        color: accentColor,
-        size: 0.15,
-        transparent: true,
-        opacity: 0.6,
-        sizeAttenuation: true
-      });
-
-      var particles = new THREE.Points(geometry, material);
-      scene.add(particles);
-
-      var lineGeometry = new THREE.BufferGeometry();
-      var linePositions = new Float32Array(particleCount * particleCount * 6);
-      lineGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
-      lineGeometry.setDrawRange(0, 0);
-
-      var lineMaterial = new THREE.LineBasicMaterial({
-        color: lineColor,
-        transparent: true,
-        opacity: 0.08
-      });
-
-      var lines = new THREE.LineSegments(lineGeometry, lineMaterial);
-      scene.add(lines);
-
-      var mouse = { x: 0, y: 0 };
-      document.addEventListener('mousemove', function (e) {
-        mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-      });
-
-      function updateTheme() {
-        isDark = document.documentElement.classList.contains('dark');
-        lineColor.set(isDark ? 0x4ade80 : 0x22c55e);
-        lineMaterial.color = lineColor;
-      }
-
-      var observer = new MutationObserver(updateTheme);
-      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-
-      function animate() {
-        requestAnimationFrame(animate);
-
-        var pos = geometry.attributes.position.array;
-        var linePos = lineGeometry.attributes.position.array;
-        var lineIdx = 0;
-        var maxDist = 8;
-
-        for (var i = 0; i < particleCount; i++) {
-          pos[i * 3] += velocities[i].x;
-          pos[i * 3 + 1] += velocities[i].y;
-          pos[i * 3 + 2] += velocities[i].z;
-
-          if (Math.abs(pos[i * 3]) > 30) velocities[i].x *= -1;
-          if (Math.abs(pos[i * 3 + 1]) > 20) velocities[i].y *= -1;
-          if (Math.abs(pos[i * 3 + 2]) > 10) velocities[i].z *= -1;
-
-          for (var j = i + 1; j < particleCount; j++) {
-            var dx = pos[i * 3] - pos[j * 3];
-            var dy = pos[i * 3 + 1] - pos[j * 3 + 1];
-            var dz = pos[i * 3 + 2] - pos[j * 3 + 2];
-            var dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-
-            if (dist < maxDist) {
-              linePos[lineIdx++] = pos[i * 3];
-              linePos[lineIdx++] = pos[i * 3 + 1];
-              linePos[lineIdx++] = pos[i * 3 + 2];
-              linePos[lineIdx++] = pos[j * 3];
-              linePos[lineIdx++] = pos[j * 3 + 1];
-              linePos[lineIdx++] = pos[j * 3 + 2];
-            }
-          }
-        }
-
-        lineGeometry.attributes.position.needsUpdate = true;
-        lineGeometry.setDrawRange(0, lineIdx / 3);
-        geometry.attributes.position.needsUpdate = true;
-
-        particles.rotation.y += 0.001;
-        particles.rotation.x += 0.0005;
-        lines.rotation.y += 0.001;
-        lines.rotation.x += 0.0005;
-
-        camera.position.x += (mouse.x * 3 - camera.position.x) * 0.02;
-        camera.position.y += (mouse.y * 2 - camera.position.y) * 0.02;
-        camera.lookAt(scene.position);
-
-        renderer.render(scene, camera);
-      }
-
-      animate();
-
-      window.addEventListener('resize', function () {
-        var w = canvas.clientWidth;
-        var h = canvas.clientHeight;
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-        renderer.setSize(w, h);
-      });
-    })();
-  </script>
+    var theme = document.getElementById("theme-toggle");
+    var lightIcon = theme.querySelector(".theme-icon-light");
+    var darkIcon = theme.querySelector(".theme-icon-dark");
+    function syncIcons() {
+      var dark = document.documentElement.classList.contains("dark");
+      lightIcon.style.display = dark ? "none" : "block";
+      darkIcon.style.display = dark ? "block" : "none";
+    }
+    theme.addEventListener("click", function () {
+      var dark = document.documentElement.classList.toggle("dark");
+      localStorage.setItem("dietapp-site-theme", dark ? "dark" : "light");
+      syncIcons();
+    });
+    syncIcons();
+  })();
+</script>
 </body>
 </html>

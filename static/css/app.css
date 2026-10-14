@@ -491,7 +491,15 @@ button[type="submit"]:hover {
 
 /* ---------- mobile nav ---------- */
 @media (max-width: 640px) {
-  .app-header__nav { gap: 0.5rem; font-size: 0.8rem; }
+  .app-header__nav {
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    overflow-x: auto;
+    min-width: 0;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .app-header__nav::-webkit-scrollbar { display: none; }
   .app-header__user { display: none; }
   .app-main { padding: 1rem 0.75rem 5rem; }
   .chat-bubble { max-width: 95%; }
