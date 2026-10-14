@@ -19,3 +19,7 @@
 *.swp
 .DS_Store
 .vercel
+
+# Vercel CLI link
+site/.vercel/
+.env*
