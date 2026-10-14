@@ -64,7 +64,7 @@
     <div class="wrap">
       <p class="eyebrow" id="detected-label">Download</p>
       <h1 class="display" style="font-size:clamp(2.2rem,4.4vw,3.2rem);margin:10px 0 12px">Get DietApp for your platform.</h1>
-      <p class="lede" style="max-width:56ch">Pick your platform — one binary, zero dependencies, or an APK for your phone — and be checking labels and planning safe meals in 60 seconds.</p>
+      <p class="lede" style="max-width:56ch">macOS, Linux, Windows, or Android. One binary, zero dependencies.</p>
       <p class="muted" style="margin:12px 0 0;font:500 11.5px/1.6 var(--mono);letter-spacing:.1em;text-transform:uppercase">No account · no telemetry · open source</p>
 
       <div class="platform-grid">
@@ -92,7 +92,7 @@
         <article class="platform card" id="platform-android">
           <div class="icon-chip"><svg width="19" height="19"><use href="#i-android"/></svg></div>
           <h3>Android</h3>
-          <p>Native client for your self-hosted server, with a camera scanner.</p>
+          <p>Client for your server, with the label scanner.</p>
           <div class="codeblock" style="margin:0 0 12px;padding:10px 12px;font-size:11.5px">v1.0 · 4.6 MB · Android 7+</div>
           <a class="btn btn-primary" href="downloads/dietapp-android.apk">Download APK</a>
         </article>
@@ -117,24 +117,24 @@
 
       <div class="tabpanel active" role="tabpanel" id="panel-mac" aria-labelledby="tab-mac">
         <div class="codeblock"><b>brew install</b> dietapp<br><br><b>dietapp</b> --init-config<br><b>dietapp</b></div>
-        <p class="install-note">Or install manually from the <a href="https://github.com/Jayhub27/diet-app-go/releases/latest" rel="noopener noreferrer">latest release</a>. Then open <code>http://localhost:8080</code> in your browser.</p>
+        <p class="install-note">Or grab the binary from the <a href="https://github.com/Jayhub27/diet-app-go/releases/latest" rel="noopener noreferrer">latest release</a>. Open <code>http://localhost:8080</code>.</p>
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-linux" aria-labelledby="tab-linux">
         <div class="codeblock"><b>sudo snap install</b> dietapp<br><br><b>dietapp</b> --init-config<br><b>dietapp</b></div>
-        <p class="install-note">Or download the static binary for <a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-amd64" rel="noopener noreferrer">x64</a> / <a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-arm64" rel="noopener noreferrer">ARM64</a>. Then open <code>http://localhost:8080</code>.</p>
+        <p class="install-note">Or download the static binary for <a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-amd64" rel="noopener noreferrer">x64</a> / <a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-arm64" rel="noopener noreferrer">ARM64</a>. Open <code>http://localhost:8080</code>.</p>
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-windows" aria-labelledby="tab-windows">
         <div class="codeblock"><b>scoop bucket add</b> dietapp https://github.com/Jayhub27/diet-app-go<br><b>scoop install</b> dietapp</div>
-        <p class="install-note">Or grab the <a href="https://github.com/Jayhub27/diet-app-go/releases/latest" rel="noopener noreferrer">installer from the latest release</a>, run it, and follow the wizard. Then open <code>http://localhost:8080</code>.</p>
+        <p class="install-note">Or run the <a href="https://github.com/Jayhub27/diet-app-go/releases/latest" rel="noopener noreferrer">installer from the latest release</a>. Open <code>http://localhost:8080</code>.</p>
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-android" aria-labelledby="tab-android">
         <div class="codeblock"><b>1.</b> Run a DietApp server on any machine on your network<br>&nbsp;&nbsp;&nbsp;&nbsp;(macOS, Linux, Windows, or Docker above)<br><br><b>2.</b> Install <a href="downloads/dietapp-android.apk" style="color:var(--emerald-deep)">dietapp-android.apk</a> on your phone<br><br><b>3.</b> Enter your server URL, e.g. http://192.168.1.100:8080</div>
-        <p class="install-note">Find your server's LAN IP with <code>ip addr</code> (Linux) or <code>ipconfig</code> (Windows). Your phone must be on the same network. Once connected, everything works — including the camera-powered ingredient scanner.</p>
-        <p class="install-note">Prefer to build it yourself? <code>git clone https://github.com/Jayhub27/diet-app-go</code>, open <code>android/</code> in Android Studio, and press Run.</p>
+        <p class="install-note">Find your server's LAN IP (<code>ip addr</code> / <code>ipconfig</code>). Same network required. The label scanner works once connected.</p>
+        <p class="install-note">Building it yourself? Open <code>android/</code> in Android Studio and press Run.</p>
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-docker" aria-labelledby="tab-docker">
         <div class="codeblock"><b>docker run -d</b> --name dietapp -p 8080:8080 -v dietapp-data:/data ghcr.io/jayhub27/diet-app-go:latest</div>
-        <p class="install-note">With API keys: add <code>-e OPENAI_API_KEY=sk-… -e SESSION_SECRET=your-secret</code> to the run command. Then open <code>http://localhost:8080</code>.</p>
+        <p class="install-note">With API keys: add <code>-e OPENAI_API_KEY=sk-… -e SESSION_SECRET=your-secret</code>. Open <code>http://localhost:8080</code>.</p>
       </div>
     </div>
   </section>
