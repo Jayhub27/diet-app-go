@@ -42,33 +42,33 @@
   <section class="page-hero wrap">
     <p class="eyebrow">Download</p>
     <h1>Get DietApp for your platform.</h1>
-    <p class="lede">macOS, Linux, Windows, or Android. One bundle, no dependencies. Or skip the install and open the web app.</p>
+    <p class="lede">macOS, Linux, Windows, Android. One bundle, no dependencies.</p>
     <p class="micro">No account · No telemetry · Open source</p>
 
     <div class="platform-grid">
       <article class="platform">
         <h3>macOS</h3>
-        <p>Apple Silicon and Intel builds.</p>
+        <p>Apple Silicon and Intel.</p>
         <div class="codeblock">tar xzf dietapp-darwin-arm64.tar.gz</div>
         <a class="btn btn-primary" href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-arm64.tar.gz" rel="noopener noreferrer">Download</a>
         <span class="alt"><a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-amd64.tar.gz" rel="noopener noreferrer">Intel build</a></span>
       </article>
       <article class="platform">
         <h3>Linux</h3>
-        <p>Static binary, works on any distro.</p>
+        <p>Static binary, any distro.</p>
         <div class="codeblock">tar xzf dietapp-linux-amd64.tar.gz</div>
         <a class="btn btn-primary" href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-amd64.tar.gz" rel="noopener noreferrer">Download</a>
         <span class="alt"><a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-arm64.tar.gz" rel="noopener noreferrer">ARM64 build</a></span>
       </article>
       <article class="platform">
         <h3>Windows</h3>
-        <p>Single executable, no WSL required.</p>
+        <p>No WSL required.</p>
         <div class="codeblock">Expand-Archive dietapp-windows-amd64.zip</div>
         <a class="btn btn-primary" href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-windows-amd64.zip" rel="noopener noreferrer">Download</a>
       </article>
       <article class="platform">
         <h3>Android</h3>
-        <p>Client for your server, with the label scanner.</p>
+        <p>Client for your server.</p>
         <div class="codeblock">v1.0 · 3.1 MB · Android 7+</div>
         <a class="btn btn-primary" href="downloads/dietapp-android.apk">Download APK</a>
       </article>
@@ -77,7 +77,7 @@
     <div class="webapp-card">
       <div>
         <h3>Prefer the browser?</h3>
-        <p>Use the hosted web app — same restriction checks, nothing to install.</p>
+        <p>Same checks, nothing to install.</p>
       </div>
       <a class="btn btn-primary" href="https://diet-app-zeta-blond.vercel.app">Open the web app</a>
     </div>
@@ -86,59 +86,58 @@
   <section class="section wrap">
     <div class="section-head">
       <h2>Up and running in 60 seconds.</h2>
-      <p>Extract the bundle, run the binary, open the local address. Nothing else to install.</p>
     </div>
     <div class="install-grid">
       <article class="install-card">
         <h3>macOS</h3>
         <ol>
-          <li>Download the <b>Apple Silicon</b> bundle (or the Intel build).</li>
-          <li>Extract it and open Terminal in the folder.</li>
-          <li>Run <b>./dietapp</b> and open <b>http://localhost:8080</b>.</li>
+          <li>Download the Apple Silicon bundle (or Intel).</li>
+          <li>Extract and open Terminal.</li>
+          <li>Run <b>./dietapp</b>; open <b>localhost:8080</b>.</li>
         </ol>
         <div class="codeblock"><b>curl -LO</b> https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-arm64.tar.gz<br><b>tar xzf</b> dietapp-darwin-arm64.tar.gz<br><b>cd</b> dietapp &amp;&amp; <b>./dietapp</b></div>
       </article>
       <article class="install-card">
         <h3>Linux</h3>
         <ol>
-          <li>Download the bundle for your architecture.</li>
-          <li>Extract it anywhere you keep local apps.</li>
-          <li>Run <b>./dietapp</b> and open <b>http://localhost:8080</b>.</li>
+          <li>Download your architecture.</li>
+          <li>Extract anywhere.</li>
+          <li>Run <b>./dietapp</b>; open <b>localhost:8080</b>.</li>
         </ol>
         <div class="codeblock"><b>curl -LO</b> https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-amd64.tar.gz<br><b>tar xzf</b> dietapp-linux-amd64.tar.gz<br><b>cd</b> dietapp &amp;&amp; <b>./dietapp</b></div>
       </article>
       <article class="install-card">
         <h3>Windows</h3>
         <ol>
-          <li>Download the zip and extract it.</li>
-          <li>Open PowerShell in the folder.</li>
-          <li>Run <b>.\dietapp.exe</b> and open <b>http://localhost:8080</b>.</li>
+          <li>Download and extract.</li>
+          <li>Open PowerShell.</li>
+          <li>Run <b>.\dietapp.exe</b>; open <b>localhost:8080</b>.</li>
         </ol>
         <div class="codeblock"><b>Invoke-WebRequest</b> https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-windows-amd64.zip -OutFile dietapp.zip<br><b>Expand-Archive</b> dietapp.zip<br><b>cd</b> dietapp; <b>.\dietapp.exe</b></div>
       </article>
       <article class="install-card">
         <h3>Android</h3>
         <ol>
-          <li>Run a DietApp server on any machine on your network.</li>
-          <li>Install the APK on your phone.</li>
-          <li>Enter your server URL, e.g. <b>http://192.168.1.100:8080</b>.</li>
+          <li>Run a server on your network.</li>
+          <li>Install the APK.</li>
+          <li>Enter your server URL, e.g. <b>192.168.1.100:8080</b>.</li>
         </ol>
-        <p class="note">Find your server's LAN IP with <b>ip addr</b> or <b>ipconfig</b>. Same network required; the label scanner works once connected.</p>
+        <div class="codeblock"><b>adb install</b> dietapp-android.apk</div>
+        <p class="note">Find the LAN IP with <b>ip addr</b> or <b>ipconfig</b>. Same network required.</p>
       </article>
     </div>
-    <p class="note">Add an AI key in <b>.env</b> (see <b>.env.example</b> in the bundle) before first launch, or run a local model with Ollama or LM Studio.</p>
+    <p class="note">Add an AI key in <b>.env</b> (see <b>.env.example</b>), or run a local model.</p>
   </section>
 
   <section class="section wrap">
     <div class="section-head">
       <h2>What you need.</h2>
-      <p>Any modern desktop or an Android phone. Local AI needs a little more memory.</p>
     </div>
     <div class="req-grid">
       <div class="req">
         <h3>System</h3>
         <ul>
-          <li>macOS 10.15+, any Linux, or Windows 10+</li>
+          <li>macOS 10.15+, Linux, or Windows 10+</li>
           <li>512 MB RAM · 100 MB disk</li>
           <li>No dependencies — one static binary</li>
           <li>For local AI: 8 GB+ RAM recommended</li>
@@ -160,7 +159,7 @@
     <div class="wrap">
       <div>
         <h2>Start with one restriction.</h2>
-        <p>Install it locally, or open the web app and add your first rule in a minute.</p>
+        <p>Install it, or open the web app.</p>
         <div class="actions">
           <a class="btn btn-primary btn-lg" href="download.html">Download free</a>
           <a class="btn btn-lg" href="https://diet-app-zeta-blond.vercel.app">Open web app</a>
@@ -184,7 +183,7 @@
     <div class="foot">
       <div>
         <a class="brand" href="index.html">DietApp</a>
-        <p>A quieter way to cook with restrictions. Open source, self-hosted, and yours.</p>
+        <p>A quieter way to cook with restrictions.</p>
       </div>
       <div class="foot-cols">
         <div><h3>Product</h3><a href="index.html#features">Features</a><a href="pricing.html">Pricing</a><a href="download.html">Download</a><a href="https://diet-app-zeta-blond.vercel.app">Web app</a></div>
