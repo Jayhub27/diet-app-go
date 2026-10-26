@@ -126,19 +126,19 @@
       </div>
 
       <div class="tabpanel active" role="tabpanel" id="panel-mac" aria-labelledby="tab-mac">
-        <div class="codeblock"><b>curl -L -o</b> dietapp.tar.gz https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-arm64.tar.gz<br><b>tar xzf</b> dietapp.tar.gz<br><b>./dietapp</b> --init-config<br><b>./dietapp</b></div>
-        <p class="install-note">Apple Silicon shown; <a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-amd64.tar.gz" rel="noopener noreferrer">Intel build</a> available too. Open <code>http://localhost:8080</code>.</p>
+        <div class="codeblock"><b>curl -L -o</b> dietapp.tar.gz https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-arm64.tar.gz<br><b>tar xzf</b> dietapp.tar.gz<br><b>cd</b> dietapp<br><b>./dietapp</b></div>
+        <p class="install-note">Apple Silicon shown; <a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-amd64.tar.gz" rel="noopener noreferrer">Intel build</a> available too. Add an AI key in <code>.env</code> (see <code>.env.example</code>). Open <code>http://localhost:8080</code>.</p>
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-linux" aria-labelledby="tab-linux">
-        <div class="codeblock"><b>curl -L -o</b> dietapp.tar.gz https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-amd64.tar.gz<br><b>tar xzf</b> dietapp.tar.gz<br><b>./dietapp</b> --init-config<br><b>./dietapp</b></div>
-        <p class="install-note">ARM64: <a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-arm64.tar.gz" rel="noopener noreferrer">download the arm64 build</a>. Open <code>http://localhost:8080</code>.</p>
+        <div class="codeblock"><b>curl -L -o</b> dietapp.tar.gz https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-amd64.tar.gz<br><b>tar xzf</b> dietapp.tar.gz<br><b>cd</b> dietapp<br><b>./dietapp</b></div>
+        <p class="install-note">ARM64: <a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-arm64.tar.gz" rel="noopener noreferrer">download the arm64 build</a>. Add an AI key in <code>.env</code> (see <code>.env.example</code>). Open <code>http://localhost:8080</code>.</p>
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-windows" aria-labelledby="tab-windows">
-        <div class="codeblock"><b>Invoke-WebRequest</b> https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-windows-amd64.zip -OutFile dietapp.zip<br><b>Expand-Archive</b> dietapp.zip<br><b>.\dietapp-windows-amd64.exe</b></div>
-        <p class="install-note">Open <code>http://localhost:8080</code>.</p>
+        <div class="codeblock"><b>Invoke-WebRequest</b> https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-windows-amd64.zip -OutFile dietapp.zip<br><b>Expand-Archive</b> dietapp.zip<br><b>cd</b> dietapp<br><b>.\dietapp.exe</b></div>
+        <p class="install-note">Add an AI key in <code>.env</code> (see <code>.env.example</code>). Open <code>http://localhost:8080</code>.</p>
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-android" aria-labelledby="tab-android">
-        <div class="codeblock"><b>1.</b> Run a DietApp server on any machine on your network<br>&nbsp;&nbsp;&nbsp;&nbsp;(macOS, Linux, Windows, or Docker above)<br><br><b>2.</b> Install <a href="downloads/dietapp-android.apk" style="color:var(--emerald-deep)">dietapp-android.apk</a> on your phone<br><br><b>3.</b> Enter your server URL, e.g. http://192.168.1.100:8080</div>
+        <div class="codeblock"><b>1.</b> Run a DietApp server on any machine on your network<br>&nbsp;&nbsp;&nbsp;&nbsp;(macOS, Linux, or Windows above)<br><br><b>2.</b> Install <a href="downloads/dietapp-android.apk" style="color:var(--emerald-deep)">dietapp-android.apk</a> on your phone<br><br><b>3.</b> Enter your server URL, e.g. http://192.168.1.100:8080</div>
         <p class="install-note">Find your server's LAN IP (<code>ip addr</code> / <code>ipconfig</code>). Same network required. The label scanner works once connected.</p>
         <p class="install-note">Building it yourself? Open <code>android/</code> in Android Studio and press Run.</p>
       </div>

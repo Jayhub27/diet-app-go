@@ -24,28 +24,32 @@ jobs:
           chmod +x scripts/build.sh
           VERSION=$VERSION ./scripts/build.sh
 
-      - name: Create archives
+      - name: Create runnable bundles
         run: |
           cd build
-          tar czf dietapp-darwin-arm64.tar.gz dietapp-darwin-arm64
-          tar czf dietapp-darwin-amd64.tar.gz dietapp-darwin-amd64
-          tar czf dietapp-linux-amd64.tar.gz dietapp-linux-amd64
-          tar czf dietapp-linux-arm64.tar.gz dietapp-linux-arm64
-          zip dietapp-windows-amd64.zip dietapp-windows-amd64.exe
+          # The binary reads migrations/ and static/ from disk, so every
+          # download must ship them next to the executable.
+          for target in darwin-amd64 darwin-arm64 linux-amd64 linux-arm64; do
+            mkdir -p "bundle-$target/dietapp"
+            cp "dietapp-$target" "bundle-$target/dietapp/dietapp"
+            cp -r ../migrations ../static "bundle-$target/dietapp/"
+            cp ../.env.example "bundle-$target/dietapp/"
+            tar -C "bundle-$target" -czf "dietapp-$target.tar.gz" dietapp
+          done
+          mkdir -p bundle-windows-amd64/dietapp
+          cp dietapp-windows-amd64.exe bundle-windows-amd64/dietapp/dietapp.exe
+          cp -r ../migrations ../static bundle-windows-amd64/dietapp/
+          cp ../.env.example bundle-windows-amd64/dietapp/
+          (cd bundle-windows-amd64 && zip -qr ../dietapp-windows-amd64.zip dietapp)
 
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            build/dietapp-darwin-arm64
-            build/dietapp-darwin-amd64
             build/dietapp-darwin-arm64.tar.gz
             build/dietapp-darwin-amd64.tar.gz
-            build/dietapp-linux-amd64
-            build/dietapp-linux-arm64
             build/dietapp-linux-amd64.tar.gz
             build/dietapp-linux-arm64.tar.gz
-            build/dietapp-windows-amd64.exe
             build/dietapp-windows-amd64.zip
             site/downloads/dietapp-android.apk
           generate_release_notes: true
