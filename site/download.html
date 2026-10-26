@@ -45,6 +45,7 @@
       <a href="index.html#ai">AI models</a>
       <a href="index.html#faq">FAQ</a>
       <a href="pricing.html">Pricing</a>
+      <a href="https://diet-app-zeta-blond.vercel.app" rel="noopener noreferrer">Web app</a>
     </nav>
     <div class="header-actions">
       <button class="icon-btn" id="theme-toggle" aria-label="Switch theme" title="Switch theme">
@@ -71,31 +72,41 @@
         <article class="platform card" id="platform-mac">
           <div class="icon-chip"><svg width="19" height="19"><use href="#i-laptop"/></svg></div>
           <h3>macOS</h3>
-          <p>Universal binary for Intel and Apple Silicon.</p>
-          <div class="codeblock" style="margin:0 0 12px;padding:10px 12px;font-size:11.5px">brew install dietapp</div>
-          <a class="btn btn-primary" href="https://github.com/Jayhub27/diet-app-go/releases/latest" rel="noopener noreferrer">Download</a>
+          <p>Apple Silicon and Intel builds.</p>
+          <div class="codeblock" style="margin:0 0 12px;padding:10px 12px;font-size:11.5px">tar xzf dietapp-darwin-arm64.tar.gz</div>
+          <a class="btn btn-primary" href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-arm64.tar.gz" rel="noopener noreferrer">Download</a>
+          <p class="install-note" style="margin:10px 0 0"><a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-amd64.tar.gz" rel="noopener noreferrer">Intel build</a></p>
         </article>
         <article class="platform card" id="platform-linux">
           <div class="icon-chip"><svg width="19" height="19"><use href="#i-terminal"/></svg></div>
           <h3>Linux</h3>
           <p>Static binary, works on any distro.</p>
-          <div class="codeblock" style="margin:0 0 12px;padding:10px 12px;font-size:11.5px">snap install dietapp</div>
-          <a class="btn btn-primary" href="https://github.com/Jayhub27/diet-app-go/releases/latest" rel="noopener noreferrer">Download</a>
+          <div class="codeblock" style="margin:0 0 12px;padding:10px 12px;font-size:11.5px">tar xzf dietapp-linux-amd64.tar.gz</div>
+          <a class="btn btn-primary" href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-amd64.tar.gz" rel="noopener noreferrer">Download</a>
+          <p class="install-note" style="margin:10px 0 0"><a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-arm64.tar.gz" rel="noopener noreferrer">ARM64 build</a></p>
         </article>
         <article class="platform card" id="platform-windows">
           <div class="icon-chip"><svg width="19" height="19"><use href="#i-windows"/></svg></div>
           <h3>Windows</h3>
-          <p>Native installer, no WSL required.</p>
-          <div class="codeblock" style="margin:0 0 12px;padding:10px 12px;font-size:11.5px">scoop install dietapp</div>
-          <a class="btn btn-primary" href="https://github.com/Jayhub27/diet-app-go/releases/latest" rel="noopener noreferrer">Download</a>
+          <p>Single executable, no WSL required.</p>
+          <div class="codeblock" style="margin:0 0 12px;padding:10px 12px;font-size:11.5px">Expand-Archive dietapp-windows-amd64.zip</div>
+          <a class="btn btn-primary" href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-windows-amd64.zip" rel="noopener noreferrer">Download</a>
         </article>
         <article class="platform card" id="platform-android">
           <div class="icon-chip"><svg width="19" height="19"><use href="#i-android"/></svg></div>
           <h3>Android</h3>
           <p>Client for your server, with the label scanner.</p>
-          <div class="codeblock" style="margin:0 0 12px;padding:10px 12px;font-size:11.5px">v1.0 · 4.6 MB · Android 7+</div>
+          <div class="codeblock" style="margin:0 0 12px;padding:10px 12px;font-size:11.5px">v1.0 · 3.1 MB · Android 7+</div>
           <a class="btn btn-primary" href="downloads/dietapp-android.apk">Download APK</a>
         </article>
+      </div>
+
+      <div class="card" style="margin-top:20px;padding:22px 26px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+        <div>
+          <h3 style="margin:0 0 4px">Prefer the browser?</h3>
+          <p class="muted" style="margin:0">Use the hosted web app — same restriction checks, nothing to install.</p>
+        </div>
+        <a class="btn btn-primary" href="https://diet-app-zeta-blond.vercel.app" rel="noopener noreferrer">Open the web app</a>
       </div>
     </div>
   </section>
@@ -112,29 +123,24 @@
         <button class="tab" role="tab" aria-selected="false" aria-controls="panel-linux" id="tab-linux">Linux</button>
         <button class="tab" role="tab" aria-selected="false" aria-controls="panel-windows" id="tab-windows">Windows</button>
         <button class="tab" role="tab" aria-selected="false" aria-controls="panel-android" id="tab-android">Android</button>
-        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-docker" id="tab-docker">Docker</button>
       </div>
 
       <div class="tabpanel active" role="tabpanel" id="panel-mac" aria-labelledby="tab-mac">
-        <div class="codeblock"><b>brew install</b> dietapp<br><br><b>dietapp</b> --init-config<br><b>dietapp</b></div>
-        <p class="install-note">Or grab the binary from the <a href="https://github.com/Jayhub27/diet-app-go/releases/latest" rel="noopener noreferrer">latest release</a>. Open <code>http://localhost:8080</code>.</p>
+        <div class="codeblock"><b>curl -L -o</b> dietapp.tar.gz https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-arm64.tar.gz<br><b>tar xzf</b> dietapp.tar.gz<br><b>./dietapp</b> --init-config<br><b>./dietapp</b></div>
+        <p class="install-note">Apple Silicon shown; <a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-amd64.tar.gz" rel="noopener noreferrer">Intel build</a> available too. Open <code>http://localhost:8080</code>.</p>
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-linux" aria-labelledby="tab-linux">
-        <div class="codeblock"><b>sudo snap install</b> dietapp<br><br><b>dietapp</b> --init-config<br><b>dietapp</b></div>
-        <p class="install-note">Or download the static binary for <a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-amd64" rel="noopener noreferrer">x64</a> / <a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-arm64" rel="noopener noreferrer">ARM64</a>. Open <code>http://localhost:8080</code>.</p>
+        <div class="codeblock"><b>curl -L -o</b> dietapp.tar.gz https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-amd64.tar.gz<br><b>tar xzf</b> dietapp.tar.gz<br><b>./dietapp</b> --init-config<br><b>./dietapp</b></div>
+        <p class="install-note">ARM64: <a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-arm64.tar.gz" rel="noopener noreferrer">download the arm64 build</a>. Open <code>http://localhost:8080</code>.</p>
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-windows" aria-labelledby="tab-windows">
-        <div class="codeblock"><b>scoop bucket add</b> dietapp https://github.com/Jayhub27/diet-app-go<br><b>scoop install</b> dietapp</div>
-        <p class="install-note">Or run the <a href="https://github.com/Jayhub27/diet-app-go/releases/latest" rel="noopener noreferrer">installer from the latest release</a>. Open <code>http://localhost:8080</code>.</p>
+        <div class="codeblock"><b>Invoke-WebRequest</b> https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-windows-amd64.zip -OutFile dietapp.zip<br><b>Expand-Archive</b> dietapp.zip<br><b>.\dietapp-windows-amd64.exe</b></div>
+        <p class="install-note">Open <code>http://localhost:8080</code>.</p>
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-android" aria-labelledby="tab-android">
         <div class="codeblock"><b>1.</b> Run a DietApp server on any machine on your network<br>&nbsp;&nbsp;&nbsp;&nbsp;(macOS, Linux, Windows, or Docker above)<br><br><b>2.</b> Install <a href="downloads/dietapp-android.apk" style="color:var(--emerald-deep)">dietapp-android.apk</a> on your phone<br><br><b>3.</b> Enter your server URL, e.g. http://192.168.1.100:8080</div>
         <p class="install-note">Find your server's LAN IP (<code>ip addr</code> / <code>ipconfig</code>). Same network required. The label scanner works once connected.</p>
         <p class="install-note">Building it yourself? Open <code>android/</code> in Android Studio and press Run.</p>
-      </div>
-      <div class="tabpanel" role="tabpanel" id="panel-docker" aria-labelledby="tab-docker">
-        <div class="codeblock"><b>docker run -d</b> --name dietapp -p 8080:8080 -v dietapp-data:/data ghcr.io/jayhub27/diet-app-go:latest</div>
-        <p class="install-note">With API keys: add <code>-e OPENAI_API_KEY=sk-… -e SESSION_SECRET=your-secret</code>. Open <code>http://localhost:8080</code>.</p>
       </div>
     </div>
   </section>

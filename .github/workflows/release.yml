@@ -16,7 +16,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version-file: 'go.mod'
 
       - name: Build all platforms
         run: |
@@ -47,4 +47,5 @@ jobs:
             build/dietapp-linux-arm64.tar.gz
             build/dietapp-windows-amd64.exe
             build/dietapp-windows-amd64.zip
+            site/downloads/dietapp-android.apk
           generate_release_notes: true
