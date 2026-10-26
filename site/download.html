@@ -1,251 +1,198 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Download DietApp for macOS, Linux, Windows, or Android — start checking labels and planning meals that respect your restrictions in 60 seconds.">
-  <meta name="color-scheme" content="light dark">
-  <title>Download — DietApp</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%2317604a'/><path d='M12 19c-2.7-1.4-4.5-4-4.5-7.2A4.5 4.5 0 0 1 12 7.3a4.5 4.5 0 0 1 4.5 4.5c0 3.2-1.8 5.8-4.5 7.2z' fill='%23fdfbf6'/></svg>">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;550;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/site.css">
-  <script>
-    (function () {
-      var t = localStorage.getItem("dietapp-site-theme");
-      if (t === "dark" || (!t && matchMedia("(prefers-color-scheme: dark)").matches)) {
-        document.documentElement.classList.add("dark");
-      }
-    })();
-  </script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download — DietApp</title>
+<meta name="description" content="Download DietApp for macOS, Linux, Windows, or Android. One bundle, no dependencies, or open the hosted web app.">
+<link rel="canonical" href="https://diet-app-go.vercel.app/download.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Download DietApp">
+<meta property="og:description" content="macOS, Linux, Windows, or Android. One bundle, no dependencies.">
+<meta property="og:url" content="https://diet-app-go.vercel.app/download.html">
+<meta property="og:image" content="https://diet-app-go.vercel.app/img/app-recipe.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%231B4B5A'/><path d='M12 19c-2.7-1.4-4.5-4-4.5-7.2A4.5 4.5 0 0 1 12 7.3a4.5 4.5 0 0 1 4.5 4.5c0 3.2-1.8 5.8-4.5 7.2z' fill='%23FDFBF6'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400&family=Instrument+Sans:wght@400;500;600&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
-<svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="i-laptop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M2 19h20"/></symbol>
-  <symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></symbol>
-  <symbol id="i-windows" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 6l7-1v6H4zM13 4.8L20 4v7h-7zM4 13h7v6l-7-1zM13 13h7v7l-7-1.2z"/></symbol>
-  <symbol id="i-android" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11a6 6 0 0 1 12 0v6H6z"/><path d="M8 11 6.5 7.5M16 11l1.5-3.5M9.5 15h.01M14.5 15h.01M3.5 12v5M20.5 12v5"/></symbol>
-  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.5 4.5l2 2M17.5 17.5l2 2M19.5 4.5l-2 2M6.5 17.5l-2 2"/></symbol>
-  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></symbol>
-</svg>
-
-<header class="site-header">
-  <div class="wrap header-inner">
-    <a href="/" class="brand">
-      <span class="brand-mark">
-        <svg width="16" height="16" viewBox="0 0 24 24"><path d="M12 21c-4-2-7-6-7-11a7 7 0 0 1 14 0c0 5-3 9-7 11z" fill="currentColor"/></svg>
-      </span>
-      <span>DietApp</span>
-    </a>
-    <nav class="nav" id="nav" aria-label="Main">
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="index.html">DietApp</a>
+    <nav class="site-nav" aria-label="Main">
       <a href="index.html#features">Features</a>
       <a href="index.html#how-it-works">How it works</a>
-      <a href="index.html#ai">AI models</a>
-      <a href="index.html#faq">FAQ</a>
       <a href="pricing.html">Pricing</a>
-      <a href="https://diet-app-zeta-blond.vercel.app" rel="noopener noreferrer">Web app</a>
+      <a href="download.html">Download</a>
     </nav>
-    <div class="header-actions">
-      <button class="icon-btn" id="theme-toggle" aria-label="Switch theme" title="Switch theme">
-        <svg class="theme-icon-light" width="17" height="17"><use href="#i-moon"/></svg>
-        <svg class="theme-icon-dark" width="17" height="17" style="display:none"><use href="#i-sun"/></svg>
-      </button>
-      <a href="index.html" class="btn">Home</a>
-      <button class="icon-btn nav-toggle" id="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-      </button>
+    <div class="head-actions">
+      <a class="webapp" href="https://diet-app-zeta-blond.vercel.app">Open web app</a>
+      <a class="btn" href="download.html">Download free</a>
     </div>
   </div>
 </header>
 
-<main>
-  <section class="section" style="border-top:0;padding-top:56px">
-    <div class="wrap">
-      <p class="eyebrow" id="detected-label">Download</p>
-      <h1 class="display" style="font-size:clamp(2.2rem,4.4vw,3.2rem);margin:10px 0 12px">Get DietApp for your platform.</h1>
-      <p class="lede" style="max-width:56ch">macOS, Linux, Windows, or Android. One binary, zero dependencies.</p>
-      <p class="muted" style="margin:12px 0 0;font:500 11.5px/1.6 var(--mono);letter-spacing:.1em;text-transform:uppercase">No account · no telemetry · open source</p>
+<main id="main">
+  <section class="page-hero wrap">
+    <p class="eyebrow">Download</p>
+    <h1>Get DietApp for your platform.</h1>
+    <p class="lede">macOS, Linux, Windows, or Android. One bundle, no dependencies. Or skip the install and open the web app.</p>
+    <p class="micro">No account · No telemetry · Open source</p>
 
-      <div class="platform-grid">
-        <article class="platform card" id="platform-mac">
-          <div class="icon-chip"><svg width="19" height="19"><use href="#i-laptop"/></svg></div>
-          <h3>macOS</h3>
-          <p>Apple Silicon and Intel builds.</p>
-          <div class="codeblock" style="margin:0 0 12px;padding:10px 12px;font-size:11.5px">tar xzf dietapp-darwin-arm64.tar.gz</div>
-          <a class="btn btn-primary" href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-arm64.tar.gz" rel="noopener noreferrer">Download</a>
-          <p class="install-note" style="margin:10px 0 0"><a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-amd64.tar.gz" rel="noopener noreferrer">Intel build</a></p>
-        </article>
-        <article class="platform card" id="platform-linux">
-          <div class="icon-chip"><svg width="19" height="19"><use href="#i-terminal"/></svg></div>
-          <h3>Linux</h3>
-          <p>Static binary, works on any distro.</p>
-          <div class="codeblock" style="margin:0 0 12px;padding:10px 12px;font-size:11.5px">tar xzf dietapp-linux-amd64.tar.gz</div>
-          <a class="btn btn-primary" href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-amd64.tar.gz" rel="noopener noreferrer">Download</a>
-          <p class="install-note" style="margin:10px 0 0"><a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-arm64.tar.gz" rel="noopener noreferrer">ARM64 build</a></p>
-        </article>
-        <article class="platform card" id="platform-windows">
-          <div class="icon-chip"><svg width="19" height="19"><use href="#i-windows"/></svg></div>
-          <h3>Windows</h3>
-          <p>Single executable, no WSL required.</p>
-          <div class="codeblock" style="margin:0 0 12px;padding:10px 12px;font-size:11.5px">Expand-Archive dietapp-windows-amd64.zip</div>
-          <a class="btn btn-primary" href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-windows-amd64.zip" rel="noopener noreferrer">Download</a>
-        </article>
-        <article class="platform card" id="platform-android">
-          <div class="icon-chip"><svg width="19" height="19"><use href="#i-android"/></svg></div>
-          <h3>Android</h3>
-          <p>Client for your server, with the label scanner.</p>
-          <div class="codeblock" style="margin:0 0 12px;padding:10px 12px;font-size:11.5px">v1.0 · 3.1 MB · Android 7+</div>
-          <a class="btn btn-primary" href="downloads/dietapp-android.apk">Download APK</a>
-        </article>
+    <div class="platform-grid">
+      <article class="platform">
+        <h3>macOS</h3>
+        <p>Apple Silicon and Intel builds.</p>
+        <div class="codeblock">tar xzf dietapp-darwin-arm64.tar.gz</div>
+        <a class="btn btn-primary" href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-arm64.tar.gz" rel="noopener noreferrer">Download</a>
+        <span class="alt"><a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-amd64.tar.gz" rel="noopener noreferrer">Intel build</a></span>
+      </article>
+      <article class="platform">
+        <h3>Linux</h3>
+        <p>Static binary, works on any distro.</p>
+        <div class="codeblock">tar xzf dietapp-linux-amd64.tar.gz</div>
+        <a class="btn btn-primary" href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-amd64.tar.gz" rel="noopener noreferrer">Download</a>
+        <span class="alt"><a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-arm64.tar.gz" rel="noopener noreferrer">ARM64 build</a></span>
+      </article>
+      <article class="platform">
+        <h3>Windows</h3>
+        <p>Single executable, no WSL required.</p>
+        <div class="codeblock">Expand-Archive dietapp-windows-amd64.zip</div>
+        <a class="btn btn-primary" href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-windows-amd64.zip" rel="noopener noreferrer">Download</a>
+      </article>
+      <article class="platform">
+        <h3>Android</h3>
+        <p>Client for your server, with the label scanner.</p>
+        <div class="codeblock">v1.0 · 3.1 MB · Android 7+</div>
+        <a class="btn btn-primary" href="downloads/dietapp-android.apk">Download APK</a>
+      </article>
+    </div>
+
+    <div class="webapp-card">
+      <div>
+        <h3>Prefer the browser?</h3>
+        <p>Use the hosted web app — same restriction checks, nothing to install.</p>
       </div>
+      <a class="btn btn-primary" href="https://diet-app-zeta-blond.vercel.app">Open the web app</a>
+    </div>
+  </section>
 
-      <div class="card" style="margin-top:20px;padding:22px 26px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
-        <div>
-          <h3 style="margin:0 0 4px">Prefer the browser?</h3>
-          <p class="muted" style="margin:0">Use the hosted web app — same restriction checks, nothing to install.</p>
-        </div>
-        <a class="btn btn-primary" href="https://diet-app-zeta-blond.vercel.app" rel="noopener noreferrer">Open the web app</a>
+  <section class="section wrap">
+    <div class="section-head">
+      <h2>Up and running in 60 seconds.</h2>
+      <p>Extract the bundle, run the binary, open the local address. Nothing else to install.</p>
+    </div>
+    <div class="install-grid">
+      <article class="install-card">
+        <h3>macOS</h3>
+        <ol>
+          <li>Download the <b>Apple Silicon</b> bundle (or the Intel build).</li>
+          <li>Extract it and open Terminal in the folder.</li>
+          <li>Run <b>./dietapp</b> and open <b>http://localhost:8080</b>.</li>
+        </ol>
+        <div class="codeblock"><b>curl -LO</b> https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-arm64.tar.gz<br><b>tar xzf</b> dietapp-darwin-arm64.tar.gz<br><b>cd</b> dietapp &amp;&amp; <b>./dietapp</b></div>
+      </article>
+      <article class="install-card">
+        <h3>Linux</h3>
+        <ol>
+          <li>Download the bundle for your architecture.</li>
+          <li>Extract it anywhere you keep local apps.</li>
+          <li>Run <b>./dietapp</b> and open <b>http://localhost:8080</b>.</li>
+        </ol>
+        <div class="codeblock"><b>curl -LO</b> https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-amd64.tar.gz<br><b>tar xzf</b> dietapp-linux-amd64.tar.gz<br><b>cd</b> dietapp &amp;&amp; <b>./dietapp</b></div>
+      </article>
+      <article class="install-card">
+        <h3>Windows</h3>
+        <ol>
+          <li>Download the zip and extract it.</li>
+          <li>Open PowerShell in the folder.</li>
+          <li>Run <b>.\dietapp.exe</b> and open <b>http://localhost:8080</b>.</li>
+        </ol>
+        <div class="codeblock"><b>Invoke-WebRequest</b> https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-windows-amd64.zip -OutFile dietapp.zip<br><b>Expand-Archive</b> dietapp.zip<br><b>cd</b> dietapp; <b>.\dietapp.exe</b></div>
+      </article>
+      <article class="install-card">
+        <h3>Android</h3>
+        <ol>
+          <li>Run a DietApp server on any machine on your network.</li>
+          <li>Install the APK on your phone.</li>
+          <li>Enter your server URL, e.g. <b>http://192.168.1.100:8080</b>.</li>
+        </ol>
+        <p class="note">Find your server's LAN IP with <b>ip addr</b> or <b>ipconfig</b>. Same network required; the label scanner works once connected.</p>
+      </article>
+    </div>
+    <p class="note">Add an AI key in <b>.env</b> (see <b>.env.example</b> in the bundle) before first launch, or run a local model with Ollama or LM Studio.</p>
+  </section>
+
+  <section class="section wrap">
+    <div class="section-head">
+      <h2>What you need.</h2>
+      <p>Any modern desktop or an Android phone. Local AI needs a little more memory.</p>
+    </div>
+    <div class="req-grid">
+      <div class="req">
+        <h3>System</h3>
+        <ul>
+          <li>macOS 10.15+, any Linux, or Windows 10+</li>
+          <li>512 MB RAM · 100 MB disk</li>
+          <li>No dependencies — one static binary</li>
+          <li>For local AI: 8 GB+ RAM recommended</li>
+        </ul>
+      </div>
+      <div class="req">
+        <h3>AI provider (choose one)</h3>
+        <ul>
+          <li>Ollama — free, runs locally</li>
+          <li>LM Studio — free, runs locally</li>
+          <li>OpenAI — API key required</li>
+          <li>OpenRouter — API key required</li>
+        </ul>
       </div>
     </div>
   </section>
 
-  <section class="section">
+  <section class="cta">
     <div class="wrap">
-      <div class="section-head">
-        <p class="eyebrow">Installation</p>
-        <h2 class="display">Up and running in 60 seconds.</h2>
-      </div>
-
-      <div class="tabs" role="tablist" aria-label="Installation instructions">
-        <button class="tab" role="tab" aria-selected="true" aria-controls="panel-mac" id="tab-mac">macOS</button>
-        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-linux" id="tab-linux">Linux</button>
-        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-windows" id="tab-windows">Windows</button>
-        <button class="tab" role="tab" aria-selected="false" aria-controls="panel-android" id="tab-android">Android</button>
-      </div>
-
-      <div class="tabpanel active" role="tabpanel" id="panel-mac" aria-labelledby="tab-mac">
-        <div class="codeblock"><b>curl -L -o</b> dietapp.tar.gz https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-arm64.tar.gz<br><b>tar xzf</b> dietapp.tar.gz<br><b>cd</b> dietapp<br><b>./dietapp</b></div>
-        <p class="install-note">Apple Silicon shown; <a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-amd64.tar.gz" rel="noopener noreferrer">Intel build</a> available too. Add an AI key in <code>.env</code> (see <code>.env.example</code>). Open <code>http://localhost:8080</code>.</p>
-      </div>
-      <div class="tabpanel" role="tabpanel" id="panel-linux" aria-labelledby="tab-linux">
-        <div class="codeblock"><b>curl -L -o</b> dietapp.tar.gz https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-amd64.tar.gz<br><b>tar xzf</b> dietapp.tar.gz<br><b>cd</b> dietapp<br><b>./dietapp</b></div>
-        <p class="install-note">ARM64: <a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-arm64.tar.gz" rel="noopener noreferrer">download the arm64 build</a>. Add an AI key in <code>.env</code> (see <code>.env.example</code>). Open <code>http://localhost:8080</code>.</p>
-      </div>
-      <div class="tabpanel" role="tabpanel" id="panel-windows" aria-labelledby="tab-windows">
-        <div class="codeblock"><b>Invoke-WebRequest</b> https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-windows-amd64.zip -OutFile dietapp.zip<br><b>Expand-Archive</b> dietapp.zip<br><b>cd</b> dietapp<br><b>.\dietapp.exe</b></div>
-        <p class="install-note">Add an AI key in <code>.env</code> (see <code>.env.example</code>). Open <code>http://localhost:8080</code>.</p>
-      </div>
-      <div class="tabpanel" role="tabpanel" id="panel-android" aria-labelledby="tab-android">
-        <div class="codeblock"><b>1.</b> Run a DietApp server on any machine on your network<br>&nbsp;&nbsp;&nbsp;&nbsp;(macOS, Linux, or Windows above)<br><br><b>2.</b> Install <a href="downloads/dietapp-android.apk" style="color:var(--emerald-deep)">dietapp-android.apk</a> on your phone<br><br><b>3.</b> Enter your server URL, e.g. http://192.168.1.100:8080</div>
-        <p class="install-note">Find your server's LAN IP (<code>ip addr</code> / <code>ipconfig</code>). Same network required. The label scanner works once connected.</p>
-        <p class="install-note">Building it yourself? Open <code>android/</code> in Android Studio and press Run.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="wrap">
-      <div class="section-head">
-        <p class="eyebrow">Requirements</p>
-        <h2 class="display">What you need.</h2>
-      </div>
-      <div class="req-grid">
-        <div class="req card">
-          <h3>System</h3>
-          <ul>
-            <li>macOS 10.15+, any Linux, or Windows 10+</li>
-            <li>512 MB RAM · 100 MB disk</li>
-            <li>No dependencies — one static binary</li>
-            <li>For local AI: 8 GB+ RAM recommended</li>
-          </ul>
-        </div>
-        <div class="req card">
-          <h3>AI provider (choose one)</h3>
-          <ul>
-            <li>Ollama — free, runs locally</li>
-            <li>LM Studio — free, runs locally</li>
-            <li>OpenAI — API key required</li>
-            <li>OpenRouter — API key required</li>
-          </ul>
+      <div>
+        <h2>Start with one restriction.</h2>
+        <p>Install it locally, or open the web app and add your first rule in a minute.</p>
+        <div class="actions">
+          <a class="btn btn-primary btn-lg" href="download.html">Download free</a>
+          <a class="btn btn-lg" href="https://diet-app-zeta-blond.vercel.app">Open web app</a>
         </div>
       </div>
-
-      <div class="cta-actions" style="margin-top:34px">
-        <a class="btn btn-lg" href="https://github.com/Jayhub27/diet-app-go" rel="noopener noreferrer">Read the docs</a>
-        <a class="btn btn-lg" href="https://github.com/Jayhub27/diet-app-go/issues" rel="noopener noreferrer">Report an issue</a>
+      <div class="cta-card">
+        <span class="smallcaps">Included</span>
+        <ul>
+          <li><b>Desktop app</b><span>One static binary</span></li>
+          <li><b>Android client</b><span>APK, label scanner</span></li>
+          <li><b>Source</b><span>MIT, on GitHub</span></li>
+          <li><b>Your data</b><span>One local file</span></li>
+        </ul>
       </div>
     </div>
   </section>
 </main>
 
-<footer class="site-footer">
-  <div class="wrap footer-inner">
-    <a href="/" class="brand" style="font-size:18px">
-      <span class="brand-mark" style="width:26px;height:26px">
-        <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 21c-4-2-7-6-7-11a7 7 0 0 1 14 0c0 5-3 9-7 11z" fill="currentColor"/></svg>
-      </span>
-      <span>DietApp</span>
-    </a>
-    <div class="footer-links">
-      <a href="https://github.com/Jayhub27/diet-app-go" rel="noopener noreferrer">GitHub</a>
-      <a href="index.html#features">Features</a>
-      <a href="pricing.html">Pricing</a>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <a class="brand" href="index.html">DietApp</a>
+        <p>A quieter way to cook with restrictions. Open source, self-hosted, and yours.</p>
+      </div>
+      <div class="foot-cols">
+        <div><h3>Product</h3><a href="index.html#features">Features</a><a href="pricing.html">Pricing</a><a href="download.html">Download</a><a href="https://diet-app-zeta-blond.vercel.app">Web app</a></div>
+        <div><h3>Project</h3><a href="https://github.com/Jayhub27/diet-app-go" rel="noopener noreferrer">GitHub</a><a href="https://github.com/Jayhub27/diet-app-go/releases/latest" rel="noopener noreferrer">Releases</a><a href="downloads/dietapp-android.apk">Android APK</a><a href="https://opensource.org/license/mit" rel="noopener noreferrer">MIT licence</a></div>
+      </div>
     </div>
-    <div class="footer-copy">© 2026 DietApp. Open source.</div>
+    <div class="legal"><span>© 2026 DietApp · MIT</span><span>No telemetry · No ads · No account</span><span>Food photography via Unsplash</span></div>
   </div>
 </footer>
-
-<script>
-  (function () {
-    var toggle = document.getElementById("nav-toggle");
-    var nav = document.getElementById("nav");
-    toggle.addEventListener("click", function () {
-      var open = nav.classList.toggle("nav--open");
-      toggle.setAttribute("aria-expanded", open ? "true" : "false");
-    });
-
-    var theme = document.getElementById("theme-toggle");
-    var lightIcon = theme.querySelector(".theme-icon-light");
-    var darkIcon = theme.querySelector(".theme-icon-dark");
-    function syncIcons() {
-      var dark = document.documentElement.classList.contains("dark");
-      lightIcon.style.display = dark ? "none" : "block";
-      darkIcon.style.display = dark ? "block" : "none";
-    }
-    theme.addEventListener("click", function () {
-      var dark = document.documentElement.classList.toggle("dark");
-      localStorage.setItem("dietapp-site-theme", dark ? "dark" : "light");
-      syncIcons();
-    });
-    syncIcons();
-
-    var tabs = Array.prototype.slice.call(document.querySelectorAll(".tab"));
-    tabs.forEach(function (tab) {
-      tab.addEventListener("click", function () {
-        tabs.forEach(function (t) {
-          t.setAttribute("aria-selected", "false");
-          document.getElementById(t.getAttribute("aria-controls")).classList.remove("active");
-        });
-        tab.setAttribute("aria-selected", "true");
-        document.getElementById(tab.getAttribute("aria-controls")).classList.add("active");
-      });
-    });
-
-    var ua = navigator.userAgent;
-    var platform = /Android/i.test(ua) ? "android"
-      : /Mac/i.test(ua) ? "mac"
-      : /Win/i.test(ua) ? "windows"
-      : /Linux|X11/i.test(ua) ? "linux" : null;
-    if (platform) {
-      var card = document.getElementById("platform-" + platform);
-      if (card) card.classList.add("platform-detected");
-      var tab = document.getElementById("tab-" + platform);
-      if (tab) tab.click();
-      document.getElementById("detected-label").textContent = "Download · detected " + platform;
-    }
-  })();
-</script>
 </body>
 </html>
