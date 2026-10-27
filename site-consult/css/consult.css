@@ -117,6 +117,11 @@ ul,ol{margin:0;padding:0;list-style:none}
 .step h3{font-size:22px;margin:8px 0 5px}
 .step p{font-size:14.5px;color:var(--muted)}
 
+/* features */
+.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 48px}
+.feature-item{border-top:1px solid var(--hair);padding:18px 0 20px}
+.feature-item h3{font-size:21px;margin-bottom:5px}
+.feature-item p{font-size:14.5px;color:var(--muted);max-width:46ch}
 /* check sheet */
 .check-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
 .check-sheet{background:var(--white);border:1px solid var(--hair);border-radius:16px;padding:24px 26px 54px;box-shadow:var(--shadow);position:relative}
@@ -265,6 +270,7 @@ footer{padding-block:40px 26px}
   .float.one{right:90px}
   .check-grid,.proof-grid,.safety-grid,.plan-grid,.install-grid,.req-grid,.ai-grid{grid-template-columns:1fr}
   .steps{grid-template-columns:1fr;gap:18px}
+  .feature-grid{grid-template-columns:1fr}
   .platform-grid{grid-template-columns:1fr 1fr}
   .cta .inner{grid-template-columns:1fr;gap:28px}
   .proof-side{grid-template-columns:1fr 1fr}

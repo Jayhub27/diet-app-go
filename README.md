@@ -1,8 +1,9 @@
 # DietApp (Go + HTMX + SQLite)
 
-A rewrite of the original Next.js + Supabase DietApp. Single Go binary, SQLite
-file, HTMX for partial updates, and the OpenAI-compatible Chat Completions API
-for the AI agent (works with OpenAI, OpenRouter, Ollama, LM Studio).
+An app for people with restrictive diets: meal planning from what's already in
+the kitchen, real-time label and barcode checks, and real products checked
+against your restrictions. Free with local AI — single Go binary, SQLite file,
+HTMX, and an OpenAI-compatible agent (OpenAI, OpenRouter, Ollama, LM Studio).
 
 ## Goals
 
