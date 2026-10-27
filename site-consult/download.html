@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download — DietApp</title>
+<meta name="description" content="Download DietApp for macOS, Linux, Windows or Android. One bundle, no dependencies, or open the hosted web app.">
+<link rel="canonical" href="https://diet-app-consult.vercel.app/download.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Download DietApp">
+<meta property="og:description" content="macOS, Linux, Windows or Android. One bundle, no dependencies.">
+<meta property="og:url" content="https://diet-app-consult.vercel.app/download.html">
+<meta property="og:image" content="https://diet-app-consult.vercel.app/img/app-recipe.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%23143B2C'/><path d='M12 19c-2.7-1.4-4.5-4-4.5-7.2A4.5 4.5 0 0 1 12 7.3a4.5 4.5 0 0 1 4.5 4.5c0 3.2-1.8 5.8-4.5 7.2z' fill='%23F7F5EF'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/consult.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-head">
+  <div class="wrap">
+    <a class="brand" href="index.html">DietApp</a>
+    <nav class="nav" aria-label="Main">
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#checks">What it checks</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="download.html">Download</a>
+    </nav>
+    <div class="head-actions">
+      <a class="link" href="https://diet-app-zeta-blond.vercel.app">Open web app</a>
+      <a class="btn" href="download.html">Download free</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <section class="page-hero wrap">
+    <p class="eyebrow">Download</p>
+    <h1>Get DietApp for your platform.</h1>
+    <p class="sub">macOS, Linux, Windows or Android. One bundle, no dependencies. Or skip the install and open the web app.</p>
+
+    <div class="platform-grid">
+      <article class="platform">
+        <h3>macOS</h3>
+        <p>Apple Silicon and Intel.</p>
+        <div class="codeblock">tar xzf dietapp-darwin-arm64.tar.gz</div>
+        <a class="btn" href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-arm64.tar.gz" rel="noopener noreferrer">Download</a>
+        <span class="alt"><a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-amd64.tar.gz" rel="noopener noreferrer">Intel build</a></span>
+      </article>
+      <article class="platform">
+        <h3>Linux</h3>
+        <p>Static binary, any distro.</p>
+        <div class="codeblock">tar xzf dietapp-linux-amd64.tar.gz</div>
+        <a class="btn" href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-amd64.tar.gz" rel="noopener noreferrer">Download</a>
+        <span class="alt"><a href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-arm64.tar.gz" rel="noopener noreferrer">ARM64 build</a></span>
+      </article>
+      <article class="platform">
+        <h3>Windows</h3>
+        <p>No WSL required.</p>
+        <div class="codeblock">Expand-Archive dietapp-windows-amd64.zip</div>
+        <a class="btn" href="https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-windows-amd64.zip" rel="noopener noreferrer">Download</a>
+      </article>
+      <article class="platform">
+        <h3>Android</h3>
+        <p>Client for your server.</p>
+        <div class="codeblock">v1.0 · 3.1 MB · Android 7+</div>
+        <a class="btn" href="downloads/dietapp-android.apk">Download APK</a>
+      </article>
+    </div>
+
+    <div class="webapp-card">
+      <div>
+        <h3>Prefer the browser?</h3>
+        <p>Same checks, nothing to install.</p>
+      </div>
+      <a class="btn" href="https://diet-app-zeta-blond.vercel.app">Open the web app</a>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <div class="section-head">
+      <h2>Up and running in 60 seconds.</h2>
+    </div>
+    <div class="install-grid">
+      <article class="install-card">
+        <h3>macOS</h3>
+        <ol>
+          <li>Download the Apple Silicon bundle (or Intel).</li>
+          <li>Extract and open Terminal.</li>
+          <li>Run <b>./dietapp</b>; open <b>localhost:8080</b>.</li>
+        </ol>
+        <div class="codeblock"><b>curl -LO</b> https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-darwin-arm64.tar.gz<br><b>tar xzf</b> dietapp-darwin-arm64.tar.gz<br><b>cd</b> dietapp &amp;&amp; <b>./dietapp</b></div>
+      </article>
+      <article class="install-card">
+        <h3>Linux</h3>
+        <ol>
+          <li>Download your architecture.</li>
+          <li>Extract anywhere.</li>
+          <li>Run <b>./dietapp</b>; open <b>localhost:8080</b>.</li>
+        </ol>
+        <div class="codeblock"><b>curl -LO</b> https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-linux-amd64.tar.gz<br><b>tar xzf</b> dietapp-linux-amd64.tar.gz<br><b>cd</b> dietapp &amp;&amp; <b>./dietapp</b></div>
+      </article>
+      <article class="install-card">
+        <h3>Windows</h3>
+        <ol>
+          <li>Download and extract.</li>
+          <li>Open PowerShell.</li>
+          <li>Run <b>.\dietapp.exe</b>; open <b>localhost:8080</b>.</li>
+        </ol>
+        <div class="codeblock"><b>Invoke-WebRequest</b> https://github.com/Jayhub27/diet-app-go/releases/latest/download/dietapp-windows-amd64.zip -OutFile dietapp.zip<br><b>Expand-Archive</b> dietapp.zip<br><b>cd</b> dietapp; <b>.\dietapp.exe</b></div>
+      </article>
+      <article class="install-card">
+        <h3>Android</h3>
+        <ol>
+          <li>Run a server on your network.</li>
+          <li>Install the APK.</li>
+          <li>Enter your server URL, e.g. <b>192.168.1.100:8080</b>.</li>
+        </ol>
+        <div class="codeblock"><b>adb install</b> dietapp-android.apk</div>
+        <p class="note">Find the LAN IP with <b>ip addr</b> or <b>ipconfig</b>. Same network required.</p>
+      </article>
+    </div>
+    <p class="note" style="margin-top:16px">Add an AI key in <b>.env</b> (see <b>.env.example</b>), or run a local model.</p>
+  </section>
+
+  <section class="section wrap">
+    <div class="section-head">
+      <h2>What you need.</h2>
+    </div>
+    <div class="req-grid">
+      <div class="req">
+        <h3>System</h3>
+        <ul>
+          <li>macOS 10.15+, Linux, or Windows 10+</li>
+          <li>512 MB RAM · 100 MB disk</li>
+          <li>No dependencies — one static binary</li>
+          <li>For local AI: 8 GB+ RAM recommended</li>
+        </ul>
+      </div>
+      <div class="req">
+        <h3>AI provider (choose one)</h3>
+        <ul>
+          <li>Ollama — free, runs locally</li>
+          <li>LM Studio — free, runs locally</li>
+          <li>OpenAI — API key required</li>
+          <li>OpenRouter — API key required</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta">
+    <div class="wrap">
+      <h2>Start with one restriction.</h2>
+      <p>Install it, or open the web app. The check comes first.</p>
+      <div class="actions">
+        <a class="btn" href="download.html">Download free</a>
+        <a class="btn btn-outline" href="https://diet-app-zeta-blond.vercel.app">Open web app</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div>
+        <a class="brand" href="index.html">DietApp</a>
+        <p>A calmer way to eat with restrictions. Open source, self-hosted, and yours.</p>
+      </div>
+      <div class="foot-cols">
+        <div><h3>Product</h3><a href="index.html#how">How it works</a><a href="index.html#checks">What it checks</a><a href="pricing.html">Pricing</a><a href="download.html">Download</a></div>
+        <div><h3>Project</h3><a href="https://github.com/Jayhub27/diet-app-go" rel="noopener noreferrer">GitHub</a><a href="https://github.com/Jayhub27/diet-app-go/releases/latest" rel="noopener noreferrer">Releases</a><a href="downloads/dietapp-android.apk">Android APK</a><a href="https://opensource.org/license/mit" rel="noopener noreferrer">MIT licence</a></div>
+      </div>
+    </div>
+    <div class="legal"><span>© 2026 DietApp · MIT</span><span>No telemetry · No ads</span><span>Food photography via Unsplash</span></div>
+  </div>
+</footer>
+</body>
+</html>
