@@ -135,7 +135,7 @@ ul,ol{margin:0;padding:0;list-style:none}
 .check-copy li b{color:var(--ink);font-weight:500}
 
 /* proof */
-.proof-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
+.proof-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px;align-items:start}
 .shot{background:var(--white);border:1px solid var(--hair);border-radius:16px;padding:8px;box-shadow:0 18px 34px rgba(20,59,44,.08)}
 .shot img{width:100%;border-radius:10px}
 .shot figcaption{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:9px 4px 3px}
