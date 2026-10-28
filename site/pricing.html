@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pricing — DietApp</title>
-<meta name="description" content="DietApp is free with local AI. The hosted web app starts free, with Pro at $5/month for more queries.">
+<meta name="description" content="DietApp is free with local AI. The hosted web app starts free, with Pro at $5/month for more queries. No per-seat pricing.">
 <link rel="canonical" href="https://diet-app-go.vercel.app/pricing.html">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Pricing — DietApp">
@@ -13,11 +13,11 @@
 <meta property="og:image" content="https://diet-app-go.vercel.app/img/salad.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="color-scheme" content="light">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%231B4B5A'/><path d='M12 19c-2.7-1.4-4.5-4-4.5-7.2A4.5 4.5 0 0 1 12 7.3a4.5 4.5 0 0 1 4.5 4.5c0 3.2-1.8 5.8-4.5 7.2z' fill='%23FDFBF6'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect width='24' height='24' rx='6' fill='%23143B2C'/><path d='M12 19c-2.7-1.4-4.5-4-4.5-7.2A4.5 4.5 0 0 1 12 7.3a4.5 4.5 0 0 1 4.5 4.5c0 3.2-1.8 5.8-4.5 7.2z' fill='%23F7F5EF'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400&family=Instrument+Sans:wght@400;500;600&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/site.css">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/consult.css">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"DietApp","applicationCategory":"HealthApplication","operatingSystem":"macOS, Linux, Windows, Android","offers":[{"@type":"Offer","price":"0","priceCurrency":"USD","name":"Self-hosted"},{"@type":"Offer","price":"5","priceCurrency":"USD","name":"Hosted Pro"}],"url":"https://diet-app-go.vercel.app/pricing.html"}
 </script>
@@ -28,14 +28,14 @@
 <header class="site-head">
   <div class="wrap">
     <a class="brand" href="index.html">DietApp</a>
-    <nav class="site-nav" aria-label="Main">
-      <a href="index.html#features">Features</a>
-      <a href="index.html#how-it-works">How it works</a>
+    <nav class="nav" aria-label="Main">
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#checks">What it checks</a>
       <a href="pricing.html">Pricing</a>
       <a href="download.html">Download</a>
     </nav>
     <div class="head-actions">
-      <a class="webapp" href="https://diet-app-zeta-blond.vercel.app">Open web app</a>
+      <a class="link" href="https://diet-app-zeta-blond.vercel.app">Open web app</a>
       <a class="btn" href="download.html">Download free</a>
     </div>
   </div>
@@ -45,88 +45,80 @@
   <section class="page-hero wrap">
     <p class="eyebrow">Pricing</p>
     <h1>Free forever. Pay only for AI.</h1>
-    <p class="lede">Self-host for free, or use the hosted web app from $5/month.</p>
-    <p class="micro">No per-seat pricing · Cancel anytime</p>
+    <p class="sub">Free with local AI, or use the hosted web app from $5/month. Same checks either way.</p>
 
-    <div class="plan-grid">
+    <div class="plan-grid" style="margin-top:32px">
       <article class="plan">
         <h3>Self-hosted</h3>
         <p class="sub">Your machine. Your data.</p>
         <div class="price">$0 <span>forever</span></div>
         <ul>
-          <li><b>Label checks</b></li>
-          <li><b>Meal planning</b> in chat</li>
+          <li><b>Label checks</b> and chat planning</li>
           <li><b>Pantry and recipe library</b></li>
           <li><b>One SQLite file</b></li>
-          <li><b>No account</b></li>
-          <li><b>Bring your own AI key</b></li>
+          <li><b>Local AI, free, no account</b></li>
+          <li><b>Local AI or your own key</b></li>
         </ul>
-        <a class="btn btn-primary btn-block" href="download.html">Download free</a>
+        <a class="btn btn-leaf btn-block" href="download.html">Download free</a>
       </article>
-
       <article class="plan featured">
         <span class="badge">No setup</span>
         <h3>Hosted web app</h3>
-        <p class="sub">We host it. More queries, no setup.</p>
+        <p class="sub">We host it. No install.</p>
         <div class="price">$5 <span>/ month · Pro</span></div>
         <ul>
-          <li><b>Everything in self-hosted</b></li>
-          <li><b>Runs in any browser</b></li>
-          <li><b>Accounts and sync</b> across devices</li>
+          <li><b>Everything self-hosted</b></li>
+          <li><b>Any browser</b>, accounts and sync</li>
           <li><b>Managed AI keys</b> on Pro</li>
           <li><b>More AI queries</b> on Pro</li>
           <li><b>Cancel anytime</b></li>
         </ul>
-        <p class="fine">Free tier included — upgrade when you need more queries.</p>
-        <a class="btn btn-primary btn-block" href="https://diet-app-zeta-blond.vercel.app">Open the web app</a>
+        <a class="btn btn-block" href="https://diet-app-zeta-blond.vercel.app">Open the web app</a>
       </article>
     </div>
-    <p class="note">Self-hosting uses your own AI key. Pro bundles managed usage.</p>
+    <p class="muted" style="margin-top:14px;font-size:13px">Self-hosting uses your own AI key. Pro bundles managed usage.</p>
   </section>
 
   <section class="section wrap">
     <div class="section-head">
       <h2>AI costs.</h2>
+      <p>Local models cost nothing. Cloud models are billed by the provider you choose.</p>
     </div>
-    <div class="ai-cost-grid">
-      <article class="ai-cost">
+    <div class="ai-grid">
+      <article class="ai">
         <span class="cost">Free · local</span>
         <h3>Ollama</h3>
         <p>Local, free, offline.</p>
         <dl>
-          <div><dt>Models</dt><dd>Llama, Mistral, Qwen, and more</dd></div>
-          <div><dt>Requirements</dt><dd>8 GB+ RAM recommended</dd></div>
+          <div><dt>Models</dt><dd>Llama, Mistral, Qwen</dd></div>
           <div><dt>Best for</dt><dd>Offline use, privacy</dd></div>
         </dl>
       </article>
-      <article class="ai-cost">
+      <article class="ai">
         <span class="cost">Free · local</span>
         <h3>LM Studio</h3>
         <p>Local models, friendly GUI.</p>
         <dl>
-          <div><dt>Models</dt><dd>Any GGUF-format model</dd></div>
-          <div><dt>Requirements</dt><dd>8 GB+ RAM recommended</dd></div>
+          <div><dt>Models</dt><dd>Any GGUF model</dd></div>
           <div><dt>Best for</dt><dd>A GUI over the CLI</dd></div>
         </dl>
       </article>
-      <article class="ai-cost">
+      <article class="ai">
         <span class="cost">Pay as you go</span>
         <h3>OpenRouter</h3>
         <p>One key, many models.</p>
         <dl>
-          <div><dt>Billing</dt><dd>Your provider account</dd></div>
-          <div><dt>Models</dt><dd>Claude, GPT, Llama, 100+ more</dd></div>
-          <div><dt>Best for</dt><dd>Flexibility across models</dd></div>
+          <div><dt>Billing</dt><dd>Your provider</dd></div>
+          <div><dt>Best for</dt><dd>Flexibility</dd></div>
         </dl>
       </article>
-      <article class="ai-cost">
+      <article class="ai">
         <span class="cost">Pay as you go</span>
         <h3>OpenAI</h3>
         <p>GPT-4o and friends.</p>
         <dl>
-          <div><dt>Billing</dt><dd>Your provider account</dd></div>
-          <div><dt>Models</dt><dd>GPT-4o, GPT-4o-mini, o-series</dd></div>
-          <div><dt>Best for</dt><dd>Top-end model quality</dd></div>
+          <div><dt>Billing</dt><dd>Your provider</dd></div>
+          <div><dt>Best for</dt><dd>Top-end quality</dd></div>
         </dl>
       </article>
     </div>
@@ -155,22 +147,11 @@
 
   <section class="cta">
     <div class="wrap">
-      <div>
-        <h2>Try it before you pay.</h2>
-        <p>Self-host free, or start on the free tier.</p>
-        <div class="actions">
-          <a class="btn btn-primary btn-lg" href="download.html">Download free</a>
-          <a class="btn btn-lg" href="https://diet-app-zeta-blond.vercel.app">Open web app</a>
-        </div>
-      </div>
-      <div class="cta-card">
-        <span class="smallcaps">Included either way</span>
-        <ul>
-          <li><b>Restriction checks</b><span>Every answer</span></li>
-          <li><b>Label scan</b><span>Camera or photo</span></li>
-          <li><b>Recipe library</b><span>Checked and saved</span></li>
-          <li><b>No ads</b><span>Never</span></li>
-        </ul>
+      <h2>Try it before you pay.</h2>
+      <p>Self-host free, or start on the free tier.</p>
+      <div class="actions">
+        <a class="btn" href="download.html">Download free</a>
+        <a class="btn btn-outline" href="https://diet-app-zeta-blond.vercel.app">Open web app</a>
       </div>
     </div>
   </section>
@@ -181,14 +162,14 @@
     <div class="foot">
       <div>
         <a class="brand" href="index.html">DietApp</a>
-        <p>A quieter way to cook with restrictions.</p>
+        <p>A calmer way to eat with restrictions. Open source, self-hosted, and yours.</p>
       </div>
       <div class="foot-cols">
-        <div><h3>Product</h3><a href="index.html#features">Features</a><a href="pricing.html">Pricing</a><a href="download.html">Download</a><a href="https://diet-app-zeta-blond.vercel.app">Web app</a></div>
+        <div><h3>Product</h3><a href="index.html#how">How it works</a><a href="index.html#checks">What it checks</a><a href="pricing.html">Pricing</a><a href="download.html">Download</a></div>
         <div><h3>Project</h3><a href="https://github.com/Jayhub27/diet-app-go" rel="noopener noreferrer">GitHub</a><a href="https://github.com/Jayhub27/diet-app-go/releases/latest" rel="noopener noreferrer">Releases</a><a href="downloads/dietapp-android.apk">Android APK</a><a href="https://opensource.org/license/mit" rel="noopener noreferrer">MIT licence</a></div>
       </div>
     </div>
-    <div class="legal"><span>© 2026 DietApp · MIT</span><span>No telemetry · No ads · No account</span><span>Food photography via Unsplash</span></div>
+    <div class="legal"><span>© 2026 DietApp · MIT</span><span>No telemetry · No ads</span><span>Food photography via Unsplash</span></div>
   </div>
 </footer>
 </body>
