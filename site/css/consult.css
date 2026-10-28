@@ -260,6 +260,12 @@ footer{padding-block:40px 26px}
 .foot-cols a{display:block;font-size:13px;padding:3px 0}
 .legal{margin-top:30px;border-top:1px solid var(--hair);padding-top:14px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 
+/* checksums */
+.verify{margin-top:18px;background:var(--white);border:1px solid var(--hair);border-radius:12px;padding:14px 18px}
+.verify summary{cursor:pointer;font-family:var(--sans);font-size:13.5px;font-weight:500}
+.verify .note{margin-top:8px;font-size:12.5px;color:var(--muted)}
+.verify pre{margin:12px 0 0;background:#0F241A;color:#DDE9E0;font-family:var(--mono);font-size:10.5px;line-height:1.8;padding:12px 14px;border-radius:8px;overflow-x:auto}
+.verify code{font-family:var(--mono);font-size:11.5px}
 /* responsive */
 @media (max-width:960px){
   .hero{grid-template-columns:1fr;gap:38px;padding-top:40px}
