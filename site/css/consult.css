@@ -50,6 +50,16 @@ ul,ol{margin:0;padding:0;list-style:none}
 .head-actions .link{font-size:13px;color:var(--muted);border-bottom:1px solid var(--hair);padding-bottom:1px}
 .head-actions .link:hover{color:var(--ink);border-color:var(--ink);text-decoration:none}
 
+/* nav dropdowns */
+.menu{position:relative}
+.menu summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:13px;line-height:1}
+.menu summary::-webkit-details-marker{display:none}
+.menu summary::after{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-1px);transition:transform .15s}
+.menu[open] summary{color:var(--ink)}
+.menu[open] summary::after{transform:rotate(225deg) translateY(-1px)}
+.menu-panel{position:absolute;top:calc(100% + 12px);left:-14px;min-width:220px;background:var(--white);border:1px solid var(--hair);border-radius:12px;box-shadow:0 18px 34px rgba(20,59,44,.12);padding:8px;z-index:30}
+.menu-panel a{display:block;padding:9px 12px;border-radius:8px;font-size:13.5px;color:var(--ink)}
+.menu-panel a:hover{background:var(--leaf-soft);text-decoration:none}
 /* buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--pine);background:var(--pine);color:var(--porcelain);padding:11px 18px;border-radius:10px;font-family:var(--sans);font-size:13.5px;font-weight:500;line-height:1.2;cursor:pointer;transition:background .15s,border-color .15s}
 .btn:hover{background:#0E2C20;border-color:#0E2C20;text-decoration:none}
@@ -270,7 +280,7 @@ footer{padding-block:40px 26px}
 /* responsive */
 @media (max-width:960px){
   .hero{grid-template-columns:1fr;gap:38px;padding-top:40px}
-  .nav,.head-actions .link{display:none}
+  .head-actions .link{display:none}
   .object{min-height:520px}
   .plate{width:330px;height:330px;right:0}
   .check{width:320px}
@@ -285,6 +295,8 @@ footer{padding-block:40px 26px}
 @media (max-width:600px){
   .site-head .wrap{flex-wrap:wrap;height:auto;padding-block:13px;gap:8px 14px}
   .nav{display:flex;order:3;width:100%;gap:14px;font-size:12px;flex-wrap:wrap}
+  .menu{position:static}
+  .menu-panel{position:static;min-width:0;margin:8px 0 4px;box-shadow:none}
   .platform-grid{grid-template-columns:1fr}
   .proof-side{grid-template-columns:1fr}
   .proof-row,.dark-band .proof-row{grid-template-columns:1fr}

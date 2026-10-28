@@ -29,10 +29,26 @@
   <div class="wrap">
     <a class="brand" href="index.html">DietApp</a>
     <nav class="nav" aria-label="Main">
-      <a href="index.html#how">How it works</a>
-      <a href="index.html#checks">What it checks</a>
+      <details class="menu">
+        <summary>Product</summary>
+        <div class="menu-panel">
+          <a href="index.html#how">How it works</a>
+          <a href="index.html#does">What it does</a>
+          <a href="index.html#checks">What it checks</a>
+          <a href="index.html#faq">FAQ</a>
+        </div>
+      </details>
       <a href="pricing.html">Pricing</a>
-      <a href="download.html">Download</a>
+      <details class="menu">
+        <summary>Download</summary>
+        <div class="menu-panel">
+          <a href="download.html#mac">macOS</a>
+          <a href="download.html#linux">Linux</a>
+          <a href="download.html#windows">Windows</a>
+          <a href="download.html#android">Android</a>
+          <a href="download.html#verify">Verify checksum</a>
+        </div>
+      </details>
     </nav>
     <div class="head-actions">
       <a class="link" href="https://diet-app-zeta-blond.vercel.app">Open web app</a>
@@ -172,5 +188,23 @@
     <div class="legal"><span>© 2026 DietApp · MIT</span><span>No telemetry · No ads</span><span>Food photography via Unsplash</span></div>
   </div>
 </footer>
+<script>
+  (function () {
+    var menus = Array.prototype.slice.call(document.querySelectorAll(".menu"));
+    menus.forEach(function (menu) {
+      menu.addEventListener("toggle", function () {
+        if (menu.open) {
+          menus.forEach(function (other) { if (other !== menu) other.open = false; });
+        }
+      });
+    });
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest(".menu")) menus.forEach(function (m) { m.open = false; });
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") menus.forEach(function (m) { m.open = false; });
+    });
+  })();
+</script>
 </body>
 </html>
