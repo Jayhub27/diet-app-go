@@ -2,4 +2,15 @@
 <resources>
     <string name="app_name">DietApp</string>
     <string name="server_url_hint">http://192.168.1.100:8080</string>
+    <string name="mode_title">How do you want to use DietApp?</string>
+    <string name="mode_message">Cloud opens the hosted web app — no setup. My server connects to a DietApp server on your network.</string>
+    <string name="mode_cloud">DietApp Cloud</string>
+    <string name="mode_server">My server</string>
+    <string name="cloud_title">DietApp Cloud</string>
+    <string name="cloud_body">The full web app opens in your browser. Sign in there — Google sign-in works in the browser, not inside an embedded WebView.</string>
+    <string name="cloud_open">Open DietApp Cloud</string>
+    <string name="cloud_use_server">Use my own server</string>
+    <string name="switch_title">DietApp</string>
+    <string name="switch_cloud">Switch to DietApp Cloud</string>
+    <string name="switch_server">Change server URL</string>
 </resources>

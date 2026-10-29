@@ -2,6 +2,7 @@ package com.dietapp.android
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.SharedPreferences
 import android.net.Uri
@@ -15,6 +16,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.FileProvider
 import java.io.File
 
@@ -36,16 +38,43 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val PREFS_NAME = "dietapp"
         private const val KEY_SERVER_URL = "server_url"
+        private const val KEY_MODE = "mode"
+        private const val MODE_CLOUD = "cloud"
+        private const val MODE_SERVER = "server"
+        private const val CLOUD_URL = "https://diet-app-zeta-blond.vercel.app"
         private const val FILE_CHOOSER_REQUEST = 1001
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-        webView = findViewById(R.id.webview)
 
+        when (prefs.getString(KEY_MODE, null)) {
+            MODE_CLOUD -> showCloudScreen()
+            MODE_SERVER -> showServerScreen()
+            else -> showModeChooser()
+        }
+    }
+
+    private fun showModeChooser() {
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.mode_title))
+            .setMessage(getString(R.string.mode_message))
+            .setCancelable(false)
+            .setPositiveButton(getString(R.string.mode_cloud)) { _, _ ->
+                prefs.edit().putString(KEY_MODE, MODE_CLOUD).apply()
+                showCloudScreen()
+            }
+            .setNegativeButton(getString(R.string.mode_server)) { _, _ ->
+                prefs.edit().putString(KEY_MODE, MODE_SERVER).apply()
+                showServerScreen()
+            }
+            .show()
+    }
+
+    private fun showServerScreen() {
+        setContentView(R.layout.activity_main)
+        webView = findViewById(R.id.webview)
         configureWebView()
 
         val serverUrl = prefs.getString(KEY_SERVER_URL, null)
@@ -53,6 +82,28 @@ class MainActivity : AppCompatActivity() {
             promptForServerUrl()
         } else {
             webView.loadUrl(serverUrl)
+        }
+    }
+
+    private fun showCloudScreen() {
+        setContentView(R.layout.activity_cloud)
+        findViewById<android.view.View>(R.id.cloud_open).setOnClickListener { openCloud() }
+        findViewById<android.view.View>(R.id.cloud_switch).setOnClickListener {
+            prefs.edit().putString(KEY_MODE, MODE_SERVER).apply()
+            showServerScreen()
+        }
+    }
+
+    private fun openCloud() {
+        val uri = Uri.parse(CLOUD_URL)
+        try {
+            CustomTabsIntent.Builder()
+                .setShowTitle(true)
+                .setUrlBarHidingEnabled(true)
+                .build()
+                .launchUrl(this, uri)
+        } catch (e: ActivityNotFoundException) {
+            startActivity(Intent(Intent.ACTION_VIEW, uri))
         }
     }
 
@@ -64,6 +115,22 @@ class MainActivity : AppCompatActivity() {
             allowContentAccess = true
             mediaPlaybackRequiresUserGesture = false
             cacheMode = WebSettings.LOAD_DEFAULT
+        }
+
+        webView.setOnLongClickListener {
+            AlertDialog.Builder(this)
+                .setTitle(getString(R.string.switch_title))
+                .setItems(arrayOf(getString(R.string.switch_cloud), getString(R.string.switch_server))) { _, which ->
+                    when (which) {
+                        0 -> {
+                            prefs.edit().putString(KEY_MODE, MODE_CLOUD).apply()
+                            showCloudScreen()
+                        }
+                        1 -> promptForServerUrl()
+                    }
+                }
+                .show()
+            true
         }
 
         webView.webViewClient = object : WebViewClient() {
@@ -164,7 +231,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if (this::webView.isInitialized && webView.canGoBack()) {
+        val serverMode = prefs.getString(KEY_MODE, null) == MODE_SERVER
+        if (serverMode && this::webView.isInitialized && webView.canGoBack()) {
             webView.goBack()
         } else {
             super.onBackPressed()
