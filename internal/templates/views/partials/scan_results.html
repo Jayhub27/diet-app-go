@@ -47,7 +47,7 @@
           <span class="scan-verdict__icon" aria-hidden="true">⚠️</span>
           <div>
             <strong>{{.Conflicts}} blacklisted ingredient{{if gt .Conflicts 1}}s{{end}} found</strong>
-            <p>This product conflicts with your blacklist. Avoid it.</p>
+            <p>{{if .ListMode}}These ingredients conflict with your blacklist.{{else}}This product conflicts with your blacklist. Avoid it.{{end}}</p>
           </div>
         </div>
       {{else}}
@@ -55,12 +55,12 @@
           <span class="scan-verdict__icon" aria-hidden="true">✓</span>
           <div>
             <strong>No blacklisted ingredients found</strong>
-            <p>Nothing on your blacklist appears in this product.</p>
+            <p>{{if .ListMode}}Nothing on your blacklist appears in that list.{{else}}Nothing on your blacklist appears in this product.{{end}}</p>
           </div>
         </div>
       {{end}}
 
-      <h3>Detected ingredients ({{len .Ingredients}})</h3>
+      <h3>{{if .ListMode}}Checked ingredients{{else}}Detected ingredients{{end}} ({{len .Ingredients}})</h3>
       <ul class="scan-ingredients">
         {{range .Ingredients}}
           {{if .Conflict}}

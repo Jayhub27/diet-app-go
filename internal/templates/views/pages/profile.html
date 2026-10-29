@@ -39,10 +39,14 @@
   </ul>
 
   <h2>Blacklist</h2>
+  <p class="section-hint">Scan a label to check it against this list on <a href="/scan">Scan</a>, or add a whole list at once.</p>
   <form hx-post="/blacklist" hx-target="#blacklist-list" hx-swap="beforeend" class="inline-form">
     <input name="ingredient" required placeholder="e.g. cilantro">
     <button type="submit">Add</button>
   </form>
+
+  {{template "blacklist_scan" .}}
+
   <ul id="blacklist-list" class="list">
     {{range .Blacklist}}
       <li class="list-item">

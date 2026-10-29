@@ -1,0 +1,25 @@
+{{define "blacklist_scan"}}
+<form
+  class="blacklist-scan"
+  hx-post="/blacklist/scan"
+  hx-encoding="multipart/form-data"
+  hx-target="#blacklist-scan-result"
+  hx-swap="innerHTML"
+  hx-indicator="#blacklist-scan-loading"
+  hx-on::after-request="this.reset()"
+>
+  <label class="blacklist-scan__btn" title="Photograph an ingredient list">
+    <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M4 8h2l1.5-2h9L18 8h2v11H4z"/>
+      <circle cx="12" cy="13" r="3.2"/>
+    </svg>
+    <span>Scan a list</span>
+    <input type="file" name="image" accept="image/*" capture="environment" hidden onchange="this.form.requestSubmit()">
+  </label>
+  <span class="blacklist-scan__hint">Photograph an ingredient list to add every item at once.</span>
+  <span id="blacklist-scan-loading" class="blacklist-scan__loading htmx-indicator" aria-hidden="true">
+    <span class="chat-typing__dots"><span></span><span></span><span></span></span>
+  </span>
+</form>
+<div id="blacklist-scan-result" class="blacklist-scan__result" aria-live="polite" hx-on::after-swap="this.scrollIntoView({ block: 'nearest' })"></div>
+{{end}}

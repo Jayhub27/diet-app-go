@@ -60,6 +60,7 @@ func (h *Handlers) Register(e *echo.Echo) {
 	e.GET("/chat/stream", h.ChatStream) // SSE token stream
 	e.GET("/scan", h.ScanPage)
 	e.POST("/scan", h.ScanIngredients) // multipart image upload
+	e.POST("/scan/list", h.ScanList)   // pasted ingredient list, no AI
 	e.GET("/pantry", h.Pantry)
 	e.POST("/pantry", h.PantryAdd)
 	e.DELETE("/pantry/:id", h.PantryDelete)
@@ -71,6 +72,7 @@ func (h *Handlers) Register(e *echo.Echo) {
 	e.DELETE("/restrictions/:id", h.RestrictionDelete)
 	e.POST("/blacklist", h.BlacklistAdd)
 	e.POST("/blacklist/import", h.BlacklistImport)
+	e.POST("/blacklist/scan", h.BlacklistScan)
 	e.DELETE("/blacklist/:id", h.BlacklistDelete)
 	e.POST("/settings", h.SettingsSave)
 

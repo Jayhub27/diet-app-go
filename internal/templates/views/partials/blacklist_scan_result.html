@@ -1,0 +1,5 @@
+{{define "blacklist_scan_result"}}
+{{if .Error}}<div class="alert">{{.Error}}</div>{{end}}
+{{if .Message}}<div class="alert alert--info">{{.Message}}</div>{{end}}
+{{if .Swap}}{{template "blacklist_list" .}}{{end}}
+{{end}}

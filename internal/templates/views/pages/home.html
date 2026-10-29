@@ -44,6 +44,8 @@
 
   <div class="onboard-blacklist">
     <h2>Your blacklist</h2>
+    <p class="section-hint">Open <a href="/scan">Scan</a> to check a label against this list, or scan a list below to add every item at once.</p>
+    {{template "blacklist_scan" .}}
     <ul id="blacklist-list" class="list">
       {{range .Blacklist}}
         {{template "blacklist_item" .}}

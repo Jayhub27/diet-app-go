@@ -67,15 +67,15 @@ func TestMatchBlacklistEntry(t *testing.T) {
 		ingredient string
 		wantMatch  string // "" means no conflict
 	}{
-		{"peanut oil", "peanuts"},       // blacklist contained in ingredient
-		{"roasted peanuts", "peanuts"},  // exact-ish containment
-		{"peanuts", "peanuts"},          // exact
-		{"shrimp paste", "shellfish"},   // hmm — "shrimp" isn't "shellfish"; expect no match
-		{"fresh cilantro", "cilantro"},  // containment
-		{"CILANTRO", "cilantro"},        // case-insensitive
-		{"wheat flour", ""},             // no conflict
-		{"sugar", ""},                   // no conflict
-		{"", ""},                        // empty input
+		{"peanut oil", "peanuts"},      // blacklist contained in ingredient
+		{"roasted peanuts", "peanuts"}, // exact-ish containment
+		{"peanuts", "peanuts"},         // exact
+		{"shrimp paste", "shellfish"},  // hmm — "shrimp" isn't "shellfish"; expect no match
+		{"fresh cilantro", "cilantro"}, // containment
+		{"CILANTRO", "cilantro"},       // case-insensitive
+		{"wheat flour", ""},            // no conflict
+		{"sugar", ""},                  // no conflict
+		{"", ""},                       // empty input
 	}
 
 	for _, tt := range tests {
@@ -90,5 +90,62 @@ func TestMatchBlacklistEntry(t *testing.T) {
 		if got != tt.wantMatch {
 			t.Errorf("matchBlacklistEntry(%q) = %q, want %q", tt.ingredient, got, tt.wantMatch)
 		}
+	}
+}
+
+func TestParseIngredientList(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want []string
+	}{
+		{
+			name: "comma separated",
+			in:   "wheat flour, sugar, palm oil, salt",
+			want: []string{"wheat flour", "sugar", "palm oil", "salt"},
+		},
+		{
+			name: "newlines and bullets",
+			in:   "- peanuts\n- milk\n• soy",
+			want: []string{"peanuts", "milk", "soy"},
+		},
+		{
+			name: "ingredients prefix",
+			in:   "Ingredients: oats, honey; almonds",
+			want: []string{"oats", "honey", "almonds"},
+		},
+		{
+			name: "commas inside parentheses",
+			in:   "milk (2% milkfat, vitamin D), sugar",
+			want: []string{"milk (2% milkfat, vitamin D)", "sugar"},
+		},
+		{
+			name: "numbered lines",
+			in:   "1. flour\n2) sugar\n3. salt",
+			want: []string{"flour", "sugar", "salt"},
+		},
+		{
+			name: "deduplicates case-insensitively",
+			in:   "Salt, salt, SALT",
+			want: []string{"Salt"},
+		},
+		{
+			name: "empty",
+			in:   "  \n ",
+			want: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseIngredientList(tt.in)
+			if len(got) != len(tt.want) {
+				t.Fatalf("parseIngredientList(%q) = %v, want %v", tt.in, got, tt.want)
+			}
+			for i := range got {
+				if got[i] != tt.want[i] {
+					t.Errorf("parseIngredientList(%q)[%d] = %q, want %q", tt.in, i, got[i], tt.want[i])
+				}
+			}
+		})
 	}
 }

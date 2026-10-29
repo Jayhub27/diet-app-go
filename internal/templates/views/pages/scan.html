@@ -1,7 +1,7 @@
 {{define "body"}}
 <section class="scan-section">
   <h1>Scan ingredients</h1>
-  <p class="scan-sub">Photograph a food label or product and DietApp checks every ingredient against your blacklist.</p>
+  <p class="scan-sub">Photograph a food label or product, or paste an ingredient list below — DietApp checks every ingredient against your blacklist.</p>
 
   <div id="scan-dropzone" class="scan-dropzone" tabindex="0" role="button" aria-label="Upload an image">
     <div class="scan-dropzone__icon" aria-hidden="true">📷</div>
@@ -30,6 +30,16 @@
   </div>
 
   <div id="scan-results"></div>
+
+  <div class="scan-list">
+    <h2>Or paste an ingredient list</h2>
+    <p class="scan-sub">No photo needed — paste ingredients from a menu, recipe, or website and check every item against your blacklist.</p>
+    <form hx-post="/scan/list" hx-target="#scan-list-results" hx-swap="innerHTML" class="scan-list__form">
+      <textarea name="ingredients" rows="4" required placeholder="wheat flour, sugar, palm oil, salt"></textarea>
+      <button class="btn-primary" type="submit">Check list</button>
+    </form>
+    <div id="scan-list-results"></div>
+  </div>
 </section>
 
 <script>

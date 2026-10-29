@@ -679,6 +679,38 @@ section > form { margin-bottom: 1rem; }
 /* ---------- ingredient scanner ---------- */
 .scan-section { display: flex; flex-direction: column; gap: 1.5rem; }
 .scan-sub { color: var(--muted-foreground); margin-top: -0.5rem; }
+.scan-list { border-top: 1px solid var(--border); padding-top: 1.25rem; }
+.scan-list h2 { margin-top: 0; }
+.scan-list__form { display: flex; flex-direction: column; align-items: flex-start; gap: 0.6rem; }
+.scan-list__form textarea { min-height: 6.5rem; }
+
+/* ---------- blacklist: scan a list ---------- */
+.section-hint { color: var(--muted-foreground); font-size: 0.85rem; margin: -0.3rem 0 0.75rem; }
+.blacklist-scan {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+}
+.blacklist-scan__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 0.8);
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.blacklist-scan__btn:hover { background: var(--muted); border-color: var(--accent); }
+.blacklist-scan__btn svg { color: var(--accent); }
+.blacklist-scan__hint { color: var(--muted-foreground); font-size: 0.8rem; }
+.blacklist-scan__result .alert { margin-top: 0.5rem; }
 
 .scan-dropzone {
   border: 2px dashed var(--border);

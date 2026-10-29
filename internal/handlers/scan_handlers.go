@@ -1,13 +1,17 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
 	"github.com/orionryan/diet-app-go/internal/ai/provider"
 	"github.com/orionryan/diet-app-go/internal/ai/tools"
@@ -70,33 +74,7 @@ func (h *Handlers) ScanIngredients(c echo.Context) error {
 	defer os.RemoveAll(tmpDir)
 
 	var imagePaths []string
-	form, ferr := c.MultipartForm()
-	if ferr == nil && form != nil {
-		for _, key := range []string{"image", "images"} {
-			for _, fh := range form.File[key] {
-				if fh.Size > 25*1024*1024 {
-					continue
-				}
-				src, err := fh.Open()
-				if err != nil {
-					continue
-				}
-				dst, err := os.Create(filepath.Join(tmpDir, filepath.Base(fh.Filename)))
-				if err != nil {
-					src.Close()
-					continue
-				}
-				if _, err := io.Copy(dst, src); err != nil {
-					src.Close()
-					dst.Close()
-					continue
-				}
-				src.Close()
-				dst.Close()
-				imagePaths = append(imagePaths, dst.Name())
-			}
-		}
-	}
+	imagePaths = saveUploadedImages(c, tmpDir)
 	if len(imagePaths) == 0 {
 		return h.renderScanError(c, "No image received. Take a photo, upload a file, or paste a screenshot.")
 	}
@@ -125,8 +103,6 @@ func (h *Handlers) ScanIngredients(c echo.Context) error {
 		rs = append(rs, tools.Restriction{Name: r.Restriction, Severity: tools.Severity(r.Severity)})
 	}
 
-	src, model, apiKey, baseURL := h.resolveProvider(settings)
-
 	const scanPrompt = `Read this image and return ONLY a JSON object with two fields:
 - "barcode": the digits printed under a visible barcode (string, no spaces). If no barcode is visible, use "".
 - "ingredients": every ingredient you can identify, as lowercase strings. If the image shows a food label, read the full ingredients list; if it shows a meal or product photo, identify the visible ingredients.
@@ -135,56 +111,11 @@ Example: {"barcode":"4006381333931","ingredients":["wheat flour","sugar","palm o
 No prose, no markdown, no explanation.`
 
 	// ---- call vision ----
-	var reply string
-	if src == provider.SourceLocal {
-		if h.LocalAI == nil || !h.LocalAI.IsVision() {
-			return h.renderScanError(c, "No local vision model loaded. Visit /models to load a vision-capable model, or switch to a vision-capable cloud model on /profile.")
-		}
-		resp, vErr := h.LocalAI.ChatVision(ctx, provider.ChatRequest{Messages: []provider.Message{
-			{Role: "system", Content: "You are an ingredient-extraction engine. You output only JSON."},
-			{Role: "user", Content: scanPrompt},
-		}}, imagePaths)
-		if vErr != nil {
-			return h.renderScanError(c, "The AI call failed: "+vErr.Error())
-		}
-		if len(resp.Choices) > 0 {
-			reply = resp.Choices[0].Message.Content
-		}
-	} else {
-		client := provider.New(provider.Options{
-			Source:  src,
-			Model:   model,
-			APIKey:  apiKey,
-			BaseURL: baseURL,
-			AppURL:  h.Cfg.OpenRouterAppURL,
-			AppName: h.Cfg.OpenRouterAppName,
-		})
-		images := make([]provider.ImageInput, 0, len(imagePaths))
-		for _, p := range imagePaths {
-			data, rErr := os.ReadFile(p)
-			if rErr != nil {
-				continue
-			}
-			mime := http.DetectContentType(data)
-			if !strings.HasPrefix(mime, "image/") {
-				mime = "image/jpeg"
-			}
-			images = append(images, provider.ImageInput{Data: data, MimeType: mime})
-		}
-		resp, vErr := client.ChatVision(ctx, model,
-			"You are an ingredient-extraction engine. You output only JSON.",
-			scanPrompt, images)
-		if vErr != nil {
-			return h.renderScanError(c, "The AI call failed: "+vErr.Error())
-		}
-		if resp.Error != nil {
-			return h.renderScanError(c, "The AI provider returned an error: "+resp.Error.Message)
-		}
-		if len(resp.Choices) > 0 {
-			reply = resp.Choices[0].Message.Content
-		}
+	reply, err := h.visionExtract(ctx, settings, imagePaths,
+		"You are an ingredient-extraction engine. You output only JSON.", scanPrompt)
+	if err != nil {
+		return h.renderScanError(c, err.Error())
 	}
-
 	if reply == "" {
 		return h.renderScanError(c, "The model returned no reply. Try a clearer photo.")
 	}
@@ -225,7 +156,7 @@ No prose, no markdown, no explanation.`
 		results = append(results, si)
 	}
 
-	return h.renderScanResults(c, results, conflicts, product, barcodeNote)
+	return h.renderScanResults(c, results, conflicts, product, barcodeNote, false)
 }
 
 // parseScanResult extracts the barcode and ingredient list from model output.
@@ -371,13 +302,14 @@ func stemToken(s string) string {
 	return strings.Join(toks, " ")
 }
 
-func (h *Handlers) renderScanResults(c echo.Context, ingredients []scanIngredient, conflicts int, product *scanProduct, barcodeNote string) error {
+func (h *Handlers) renderScanResults(c echo.Context, ingredients []scanIngredient, conflicts int, product *scanProduct, barcodeNote string, listMode bool) error {
 	c.Response().Writer.Header().Set("Content-Type", "text/html; charset=utf-8")
 	return h.Templates.RenderPartial(c.Response().Writer, "partials/scan_results.html", map[string]any{
 		"Ingredients": ingredients,
 		"Conflicts":   conflicts,
 		"Product":     product,
 		"BarcodeNote": barcodeNote,
+		"ListMode":    listMode,
 	})
 }
 
@@ -386,4 +318,308 @@ func (h *Handlers) renderScanError(c echo.Context, msg string) error {
 	return h.Templates.RenderPartial(c.Response().Writer, "partials/scan_results.html", map[string]any{
 		"Error": msg,
 	})
+}
+
+// ---- paste-a-list checking (no AI) ----
+
+// ScanList checks a pasted ingredient list against the user's blacklist. It is
+// deterministic, so it works without any vision model or API key.
+func (h *Handlers) ScanList(c echo.Context) error {
+	u := auth.CurrentUser(c)
+	if u == nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "sign in first")
+	}
+	rl := h.Limiter.Allow("scan:" + u.ID)
+	if !rl.Allowed {
+		return h.renderScanError(c, "You're going a bit fast — try again in a few seconds.")
+	}
+
+	raw := strings.TrimSpace(c.FormValue("ingredients"))
+	if raw == "" {
+		return h.renderScanError(c, "Paste an ingredient list first.")
+	}
+	items := parseIngredientList(raw)
+	if len(items) == 0 {
+		return h.renderScanError(c, "Couldn't find any ingredients in that text.")
+	}
+
+	blacklist, err := h.loadBlacklist(c.Request().Context(), u.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	blNames := make([]string, 0, len(blacklist))
+	for _, b := range blacklist {
+		blNames = append(blNames, b.Ingredient)
+	}
+
+	results := make([]scanIngredient, 0, len(items))
+	conflicts := 0
+	for _, item := range items {
+		match := matchBlacklistEntry(item, blNames)
+		results = append(results, scanIngredient{Name: item, Match: match, Conflict: match != ""})
+		if match != "" {
+			conflicts++
+		}
+	}
+	return h.renderScanResults(c, results, conflicts, nil, "", true)
+}
+
+// parseIngredientList splits a pasted label into individual ingredients. It
+// splits on newlines, semicolons and top-level commas, keeping commas inside
+// parentheses (e.g. "milk (2% milkfat, vitamin D)") intact.
+func parseIngredientList(raw string) []string {
+	raw = strings.TrimSpace(strings.ReplaceAll(raw, "\r\n", "\n"))
+	if raw == "" {
+		return nil
+	}
+	if lower := strings.ToLower(raw); strings.HasPrefix(lower, "ingredients:") {
+		raw = raw[len("ingredients:"):]
+	}
+
+	var parts []string
+	var b strings.Builder
+	depth := 0
+	flush := func() {
+		if s := strings.TrimSpace(b.String()); s != "" {
+			parts = append(parts, s)
+		}
+		b.Reset()
+	}
+	for _, r := range raw {
+		switch r {
+		case '(', '[':
+			depth++
+			b.WriteRune(r)
+		case ')', ']':
+			if depth > 0 {
+				depth--
+			}
+			b.WriteRune(r)
+		case '\n', ';', '•':
+			flush()
+		case ',':
+			if depth > 0 {
+				b.WriteRune(r)
+			} else {
+				flush()
+			}
+		default:
+			b.WriteRune(r)
+		}
+	}
+	flush()
+
+	out := make([]string, 0, len(parts))
+	seen := map[string]bool{}
+	for _, p := range parts {
+		p = strings.TrimSpace(strings.Trim(p, "-–—*·."))
+		p = strings.TrimSpace(strings.TrimLeft(p, "0123456789.) "))
+		p = strings.Join(strings.Fields(p), " ")
+		if p == "" || len(p) > 120 {
+			continue
+		}
+		key := strings.ToLower(p)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		out = append(out, p)
+		if len(out) >= 200 {
+			break
+		}
+	}
+	return out
+}
+
+// ---- scan an ingredient list into the blacklist ----
+
+// BlacklistScan reads an ingredient list from a photo and adds every name to
+// the user's blacklist. The response includes an OOB swap of #blacklist-list.
+func (h *Handlers) BlacklistScan(c echo.Context) error {
+	u := auth.CurrentUser(c)
+	if u == nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "sign in first")
+	}
+	rl := h.Limiter.Allow("scan:" + u.ID)
+	if !rl.Allowed {
+		return h.renderBlacklistScan(c, "You're going a bit fast — try again in a few seconds.", "", nil)
+	}
+
+	tmpDir, err := os.MkdirTemp("", "dietapp-blacklist-*")
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	defer os.RemoveAll(tmpDir)
+
+	imagePaths := saveUploadedImages(c, tmpDir)
+	if len(imagePaths) == 0 {
+		return h.renderBlacklistScan(c, "No image received. Take a photo or choose a file.", "", nil)
+	}
+
+	ctx := c.Request().Context()
+	settings, err := h.loadSettings(ctx, u.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	const prompt = `Read the ingredient list in this image and return ONLY a JSON array of ingredient names as lowercase strings, one per element.
+Strip quantities, percentages, and parenthetical notes. Keep names short (1-5 words).
+Example: ["wheat flour","sugar","palm oil"]
+No prose, no markdown, no explanation.`
+
+	reply, err := h.visionExtract(ctx, settings, imagePaths,
+		"You read ingredient lists and output only JSON.", prompt)
+	if err != nil {
+		return h.renderBlacklistScan(c, err.Error(), "", nil)
+	}
+	names := cleanIngredients(parseIngredientJSON(reply))
+	if len(names) == 0 {
+		return h.renderBlacklistScan(c, "Couldn't read an ingredient list from that photo. Try a sharper, well-lit picture.", "", nil)
+	}
+
+	existing, err := h.loadBlacklist(ctx, u.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	existingSet := make(map[string]bool, len(existing))
+	for _, b := range existing {
+		existingSet[strings.ToLower(strings.TrimSpace(b.Ingredient))] = true
+	}
+
+	added := make([]string, 0, len(names))
+	for _, name := range names {
+		key := strings.ToLower(strings.TrimSpace(name))
+		if key == "" || existingSet[key] {
+			continue
+		}
+		if _, err := h.DB.ExecContext(ctx,
+			`insert into blacklist (id, user_id, ingredient) values (?, ?, ?)`,
+			uuid.NewString(), u.ID, name); err != nil {
+			continue
+		}
+		existingSet[key] = true
+		added = append(added, name)
+	}
+
+	updated, err := h.loadBlacklist(ctx, u.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+
+	msg := ""
+	switch {
+	case len(added) == 0:
+		msg = "No new ingredients — everything on that list is already blacklisted."
+	case len(added) <= 12:
+		msg = fmt.Sprintf("Added %d ingredient%s: %s.", len(added), plural(len(added)), strings.Join(added, ", "))
+	default:
+		msg = fmt.Sprintf("Added %d ingredients, including %s.", len(added), strings.Join(added[:12], ", "))
+	}
+	return h.renderBlacklistScan(c, "", msg, updated)
+}
+
+func plural(n int) string {
+	if n == 1 {
+		return ""
+	}
+	return "s"
+}
+
+func (h *Handlers) renderBlacklistScan(c echo.Context, errMsg, msg string, bl []blacklistRow) error {
+	c.Response().Writer.Header().Set("Content-Type", "text/html; charset=utf-8")
+	return h.Templates.RenderPartial(c.Response().Writer, "partials/blacklist_scan_result.html", map[string]any{
+		"Error":     errMsg,
+		"Message":   msg,
+		"Blacklist": bl,
+		"Swap":      bl != nil,
+	})
+}
+
+// saveUploadedImages stores multipart image/images uploads in tmpDir and
+// returns their paths. Oversized or unreadable files are skipped.
+func saveUploadedImages(c echo.Context, tmpDir string) []string {
+	form, err := c.MultipartForm()
+	if err != nil || form == nil {
+		return nil
+	}
+	var paths []string
+	for _, key := range []string{"image", "images"} {
+		for _, fh := range form.File[key] {
+			if fh.Size > 25*1024*1024 {
+				continue
+			}
+			src, err := fh.Open()
+			if err != nil {
+				continue
+			}
+			dst, err := os.Create(filepath.Join(tmpDir, filepath.Base(fh.Filename)))
+			if err != nil {
+				src.Close()
+				continue
+			}
+			if _, err := io.Copy(dst, src); err != nil {
+				src.Close()
+				dst.Close()
+				continue
+			}
+			src.Close()
+			dst.Close()
+			paths = append(paths, dst.Name())
+		}
+	}
+	return paths
+}
+
+// visionExtract sends images to the configured provider and returns the raw
+// text reply. Errors are already phrased for the UI.
+func (h *Handlers) visionExtract(ctx context.Context, settings settingsRow, imagePaths []string, systemPrompt, prompt string) (string, error) {
+	src, model, apiKey, baseURL := h.resolveProvider(settings)
+	if src == provider.SourceLocal {
+		if h.LocalAI == nil || !h.LocalAI.IsVision() {
+			return "", errors.New("No local vision model loaded. Visit /models to load a vision-capable model, or switch to a vision-capable cloud model on /profile.")
+		}
+		resp, err := h.LocalAI.ChatVision(ctx, provider.ChatRequest{Messages: []provider.Message{
+			{Role: "system", Content: systemPrompt},
+			{Role: "user", Content: prompt},
+		}}, imagePaths)
+		if err != nil {
+			return "", fmt.Errorf("The AI call failed: %w", err)
+		}
+		if len(resp.Choices) > 0 {
+			return resp.Choices[0].Message.Content, nil
+		}
+		return "", nil
+	}
+
+	client := provider.New(provider.Options{
+		Source:  src,
+		Model:   model,
+		APIKey:  apiKey,
+		BaseURL: baseURL,
+		AppURL:  h.Cfg.OpenRouterAppURL,
+		AppName: h.Cfg.OpenRouterAppName,
+	})
+	images := make([]provider.ImageInput, 0, len(imagePaths))
+	for _, p := range imagePaths {
+		data, err := os.ReadFile(p)
+		if err != nil {
+			continue
+		}
+		mime := http.DetectContentType(data)
+		if !strings.HasPrefix(mime, "image/") {
+			mime = "image/jpeg"
+		}
+		images = append(images, provider.ImageInput{Data: data, MimeType: mime})
+	}
+	resp, err := client.ChatVision(ctx, model, systemPrompt, prompt, images)
+	if err != nil {
+		return "", fmt.Errorf("The AI call failed: %w", err)
+	}
+	if resp.Error != nil {
+		return "", fmt.Errorf("The AI provider returned an error: %s", resp.Error.Message)
+	}
+	if len(resp.Choices) > 0 {
+		return resp.Choices[0].Message.Content, nil
+	}
+	return "", nil
 }
