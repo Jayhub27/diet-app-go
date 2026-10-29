@@ -78,7 +78,7 @@ func main() {
 	h.Register(e)
 
 	addr := ":" + itoa(cfg.Port)
-	log.Printf("DietApp %s listening on %s (db=%s, anon=%v, models=%s)", version, addr, cfg.DatabasePath, cfg.AllowAnonymous, aiMgr.ModelsDir())
+	log.Printf("DietApp Lite %s listening on %s (db=%s, anon=%v, models=%s)", version, addr, cfg.DatabasePath, cfg.AllowAnonymous, aiMgr.ModelsDir())
 	if err := e.Start(addr); err != nil {
 		log.Fatal(err)
 	}

@@ -107,7 +107,7 @@ func (h *Handlers) page(c echo.Context, name string, data any) error {
 func titleFor(name string) string {
 	switch name {
 	case "home":
-		return "DietApp"
+		return "Home"
 	case "chat":
 		return "Chat"
 	case "scan":
@@ -123,7 +123,7 @@ func titleFor(name string) string {
 	case "register":
 		return "Create account"
 	}
-	return "DietApp"
+	return ""
 }
 
 func asMap(v any) map[string]any {

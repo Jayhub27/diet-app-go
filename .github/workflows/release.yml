@@ -45,6 +45,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
+          name: DietApp Lite ${{ github.ref_name }}
           files: |
             build/dietapp-darwin-arm64.tar.gz
             build/dietapp-darwin-amd64.tar.gz

@@ -1,12 +1,12 @@
 # DietApp for Android
 
-A thin native Android client for DietApp — hosted cloud app or self-hosted server.
+The main DietApp Android client — hosted DietApp Cloud or a self-hosted DietApp Lite server.
 
 ## What it is
 
 - First launch: **DietApp Cloud** (opens the hosted web app in Chrome Custom Tabs)
   or **My server** (WebView + server URL)
-- Self-hosted mode: WebView loads your DietApp server URL
+- Self-hosted mode: WebView loads your DietApp Lite server URL
 - Native camera + gallery bridge for the ingredient scanner (`/scan`)
 - Server URL stored on-device
 - Long-press the web page in server mode to switch to Cloud or change the URL
@@ -17,7 +17,7 @@ A thin native Android client for DietApp — hosted cloud app or self-hosted ser
 - Android Studio Hedgehog (2023.1.1) or newer
 - Android SDK 24+ (Android 7.0+)
 - Cloud mode: any browser that supports Custom Tabs (Chrome recommended)
-- Server mode: a running DietApp server reachable from the phone (same Wi-Fi, or a public URL via tunnel/reverse proxy)
+- Server mode: a running DietApp Lite server reachable from the phone (same Wi-Fi, or a public URL via tunnel/reverse proxy)
 
 ## Build
 
@@ -42,7 +42,7 @@ sure the phone is on the same network.
 The URL is stored in SharedPreferences. To change it later, clear app data
 (Settings → Apps → DietApp → Storage → Clear data) and relaunch.
 
-## Ingredient scanning on Android
+## Ingredient scanning on Android (DietApp Lite server mode)
 
 Open **Scan** in the nav. Tapping "Take photo" or "Choose image" opens the
 native camera/gallery picker. The photo is uploaded to your server, the vision

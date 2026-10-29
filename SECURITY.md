@@ -15,8 +15,9 @@ ask otherwise.
 ## Scope
 
 - https://diet-app-go.vercel.app (marketing site and downloads)
-- The Go server and its static UI (`cmd/server`, `internal`, `static`)
-- The Android client (`android/`)
+- DietApp Lite (the Go server and its static UI: `cmd/server`, `internal`,
+  `static`)
+- The DietApp Android client (`android/`)
 
 The hosted web app at https://diet-app-zeta-blond.vercel.app is a separate
 codebase and is out of scope here.

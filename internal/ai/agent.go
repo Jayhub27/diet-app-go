@@ -223,7 +223,7 @@ func buildSchemas(ts []*tools.Tool) []provider.Tool {
 
 // SystemPrompt is the long-form instructions. We trim the prompt from the
 // TS version and rely on tool descriptions for the how.
-const SystemPrompt = `You are DietApp, an expert chef and nutritionist assistant.
+const SystemPrompt = `You are DietApp Lite, an expert chef and nutritionist assistant.
 
 Help the user create recipes that respect their dietary restrictions, calorie
 targets, and pantry constraints.
