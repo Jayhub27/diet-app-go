@@ -1,9 +1,10 @@
 # DietApp Lite (Go + HTMX + SQLite)
 
-DietApp Lite is the free, self-hosted desktop/server companion to DietApp, the
-main mobile and cloud app. It covers meal planning from what's already in the
-kitchen, real-time label and barcode checks, and real products checked against
-your restrictions. One Go binary, SQLite, HTMX, and an OpenAI-compatible agent
+DietApp Lite is a separate, self-hosted lite version of DietApp, the official
+app. The official app runs in the browser and on Android; Lite covers the
+essentials locally: meal planning from what's already in the kitchen,
+real-time label and barcode checks, and real products checked against your
+restrictions. One Go binary, SQLite, HTMX, and an OpenAI-compatible agent
 (OpenAI, OpenRouter, Ollama, LM Studio).
 
 ## Goals
