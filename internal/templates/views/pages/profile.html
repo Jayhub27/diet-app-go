@@ -5,7 +5,15 @@
   {{if .User}}
   <div class="card" style="margin-bottom:1.5rem">
     <p style="margin:0.25rem 0"><strong>Email:</strong> {{if .User.IsAnonymous}}anonymous{{else}}{{.User.Email}}{{end}}</p>
-    <p style="margin:0.25rem 0"><strong>Tier:</strong> {{.User.SubscriptionTier}}</p>
+
+    <div class="plan-card">
+      <div class="plan-card__text">
+        <p class="plan-card__eyebrow">Plan</p>
+        <p class="plan-card__title">DietApp Free <span class="plan-card__badge">self-hosted</span></p>
+        <p class="plan-card__note">Pro adds managed AI models and sync in DietApp Cloud for $5/month. This server stays free.</p>
+      </div>
+      <a class="btn btn-primary plan-card__cta" href="https://diet-app-zeta-blond.vercel.app/subscribe" target="_blank" rel="noopener noreferrer">Upgrade to Pro</a>
+    </div>
   </div>
   {{end}}
 

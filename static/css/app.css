@@ -178,6 +178,50 @@ a:hover { color: var(--accent-hover); }
   padding: 1rem 1.25rem;
 }
 
+/* plan card: self-hosted tier + cloud upgrade */
+.plan-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+.plan-card__eyebrow {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted-foreground);
+}
+.plan-card__title {
+  margin: 0.2rem 0 0;
+  font-weight: 600;
+}
+.plan-card__badge {
+  margin-left: 0.35rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  vertical-align: 0.1em;
+}
+.plan-card__note {
+  margin: 0.3rem 0 0;
+  max-width: 44ch;
+  font-size: 0.85rem;
+  color: var(--muted-foreground);
+}
+.plan-card__cta { flex: 0 0 auto; }
+@media (max-width: 560px) {
+  .plan-card__cta { width: 100%; }
+}
+
 /* ---------- form controls ---------- */
 input[type="text"],
 input[type="email"],
