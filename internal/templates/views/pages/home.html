@@ -9,7 +9,7 @@
     {{if .Reply}}
       <div class="chat-bubble chat-bubble--assistant">
         <div class="chat-bubble__role">dietapp</div>
-        <div>{{.Reply}}</div>
+        <div class="chat-bubble__content">{{formatMessage .Reply}}</div>
       </div>
     {{end}}
     <div id="onboard-typing" class="chat-bubble chat-bubble--assistant chat-typing htmx-indicator" aria-hidden="true">

@@ -11,9 +11,6 @@
       <a href="/models">Models</a>
       <a href="/profile">Profile</a>
       {{if .User}}
-        <span class="app-header__user">
-          {{if .User.IsAnonymous}}anonymous{{else}}{{.User.Email}}{{end}}
-        </span>
         <button class="theme-toggle" type="button" onclick="window.__toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
           <span aria-hidden="true">◐</span>
         </button>

@@ -25,9 +25,10 @@ type Engine struct {
 
 func New() (*Engine, error) {
 	funcs := template.FuncMap{
-		"safeHTML": func(s string) template.HTML { return template.HTML(s) },
-		"fmtDate":  func(t time.Time) string { return t.Format("Jan 2, 2006") },
-		"upper":    strings.ToUpper,
+		"safeHTML":      func(s string) template.HTML { return template.HTML(s) },
+		"fmtDate":       func(t time.Time) string { return t.Format("Jan 2, 2006") },
+		"upper":         strings.ToUpper,
+		"formatMessage": FormatMessage,
 	}
 	t := template.New("").Funcs(funcs)
 	if err := walk(t, viewsFS, "views"); err != nil {

@@ -8,12 +8,12 @@
         {{if eq .Role "user"}}
           <div class="chat-bubble chat-bubble--user">
             <div class="chat-bubble__role">you</div>
-            <div>{{.Content}}</div>
+            <div class="chat-bubble__content">{{.Content}}</div>
           </div>
         {{else}}
           <div class="chat-bubble chat-bubble--assistant">
             <div class="chat-bubble__role">dietapp</div>
-            <div>{{.Content}}</div>
+            <div class="chat-bubble__content">{{formatMessage .Content}}</div>
           </div>
         {{end}}
       {{end}}
@@ -99,7 +99,7 @@
       const log = document.getElementById('chat-log');
       const div = document.createElement('div');
       div.className = 'chat-bubble chat-bubble--user';
-      div.innerHTML = '<div class="chat-bubble__role">you</div><div></div>';
+      div.innerHTML = '<div class="chat-bubble__role">you</div><div class="chat-bubble__content"></div>';
       div.lastChild.textContent = text;
       log.insertBefore(div, document.getElementById('chat-typing'));
       window.__scrollChatBottom();
@@ -113,6 +113,18 @@
       div.innerHTML = '<div class="chat-bubble__role">dietapp</div><div class="chat-bubble__content"></div>';
       log.insertBefore(div, document.getElementById('chat-typing'));
       return div.querySelector('.chat-bubble__content');
+    }
+
+    // The server sends rendered HTML for the final reply, so markdown and
+    // trailing newlines look the same as after a page reload.
+    function readDonePayload(e) {
+      try {
+        const parsed = JSON.parse(e.data || '{}');
+        if (Array.isArray(parsed)) return { tools: parsed, html: '' };
+        return { tools: parsed.tools || [], html: parsed.html || '' };
+      } catch (_) {
+        return { tools: [], html: '' };
+      }
     }
 
     window.__sendChat = function (ev) {
@@ -144,8 +156,11 @@
           .then(html => {
             const wrap = document.createElement('div');
             wrap.innerHTML = html;
-            const bubbles = wrap.querySelectorAll('.chat-bubble');
-            if (bubbles.length) target.parentNode.replaceWith(...bubbles);
+            // The optimistic user bubble is already in the log; only take the
+            // assistant reply from the response (it also contains the user
+            // bubble, which would otherwise be duplicated).
+            const reply = wrap.querySelector('.chat-bubble--assistant:not(.chat-typing)');
+            if (reply) target.parentNode.replaceWith(reply);
             window.__scrollChatBottom();
           })
           .catch(() => { target.textContent = '(request failed)'; })
@@ -171,21 +186,22 @@
       });
       es.addEventListener('error', function (e) {
         if (acc === '') {
-          target.textContent = 'Sorry — the AI call failed: ' + (e.data || 'unknown error');
+          target.textContent = e.data || 'Sorry — the AI call failed.';
         }
         es.close();
         sendBtn.disabled = false;
       });
       es.addEventListener('done', function (e) {
-        // e.data is a JSON array of tool hits (may be empty). Finalize bubble.
-        try {
-          const hits = JSON.parse(e.data || '[]');
-          if (hits.length) {
+        // e.data is JSON: { tools: [...], html: "<formatted reply>" }.
+        const payload = readDonePayload(e);
+        if (payload.html) target.innerHTML = payload.html;
+        if (payload.tools.length) {
+          try {
             const details = document.createElement('details');
             const summary = document.createElement('summary');
             summary.textContent = 'tools used';
             const ul = document.createElement('ul');
-            hits.forEach(function (h) {
+            payload.tools.forEach(function (h) {
               const li = document.createElement('li');
               const code = document.createElement('code');
               code.textContent = h.Name;
@@ -193,8 +209,8 @@
             });
             details.appendChild(summary); details.appendChild(ul);
             target.parentNode.appendChild(details);
-          }
-        } catch (_) {}
+          } catch (_) {}
+        }
         target.parentNode.classList.remove('chat-bubble--streaming');
         es.close();
         sendBtn.disabled = false;

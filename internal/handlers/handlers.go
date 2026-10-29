@@ -56,7 +56,7 @@ func (h *Handlers) Register(e *echo.Echo) {
 	// App
 	e.GET("/", h.Home)
 	e.GET("/chat", h.Chat)
-	e.POST("/chat", h.ChatSend) // HTMX form post
+	e.POST("/chat", h.ChatSend)         // HTMX form post
 	e.GET("/chat/stream", h.ChatStream) // SSE token stream
 	e.GET("/scan", h.ScanPage)
 	e.POST("/scan", h.ScanIngredients) // multipart image upload
@@ -705,11 +705,15 @@ func (h *Handlers) ChatStream(c echo.Context) error {
 		msg := "Sorry — the AI call failed: " + runErr.Error()
 		send("error", msg)
 		h.persistAssistant(ctx, convID, u.ID, msg)
-		send("done", msg)
+		doneJSON, _ := json.Marshal(map[string]any{
+			"tools": []map[string]string{},
+			"html":  string(templates.FormatMessage(msg)),
+		})
+		send("done", string(doneJSON))
 		return nil
 	}
 
-	reply := fullReply.String()
+	reply := strings.TrimSpace(fullReply.String())
 	if reply == "" {
 		reply = "(no reply)"
 	}
@@ -718,9 +722,12 @@ func (h *Handlers) ChatStream(c echo.Context) error {
 	for name := range res.ToolHit {
 		toolHits = append(toolHits, map[string]string{"Name": name, "Result": "called"})
 	}
-	// Send tool hits + final reply as the closing event.
-	toolJSON, _ := json.Marshal(toolHits)
-	send("done", string(toolJSON))
+	// Send rendered tool hits + final reply as the closing event.
+	doneJSON, _ := json.Marshal(map[string]any{
+		"tools": toolHits,
+		"html":  string(templates.FormatMessage(reply)),
+	})
+	send("done", string(doneJSON))
 	return nil
 }
 
@@ -750,6 +757,7 @@ func (h *Handlers) chatStreamFallback(c echo.Context, u *auth.User, userText str
 }
 
 func (h *Handlers) persistAssistant(ctx context.Context, convID, userID, reply string) {
+	reply = strings.TrimSpace(reply)
 	_, _ = h.DB.ExecContext(ctx,
 		`insert into messages (id, conversation_id, user_id, role, content) values (?, ?, ?, 'assistant', ?)`,
 		uuid.NewString(), convID, userID, reply)
