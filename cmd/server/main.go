@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -16,7 +18,17 @@ import (
 	"github.com/orionryan/diet-app-go/internal/templates"
 )
 
+// version is injected at build time from the git tag by scripts/build.sh.
+var version = "dev"
+
 func main() {
+	showVersion := flag.Bool("version", false, "print version and exit")
+	flag.Parse()
+	if *showVersion {
+		fmt.Printf("dietapp %s\n", version)
+		return
+	}
+
 	cfg := config.Load()
 
 	d, err := db.Open(cfg.DatabasePath)
@@ -66,7 +78,7 @@ func main() {
 	h.Register(e)
 
 	addr := ":" + itoa(cfg.Port)
-	log.Printf("DietApp listening on %s (db=%s, anon=%v, models=%s)", addr, cfg.DatabasePath, cfg.AllowAnonymous, aiMgr.ModelsDir())
+	log.Printf("DietApp %s listening on %s (db=%s, anon=%v, models=%s)", version, addr, cfg.DatabasePath, cfg.AllowAnonymous, aiMgr.ModelsDir())
 	if err := e.Start(addr); err != nil {
 		log.Fatal(err)
 	}
