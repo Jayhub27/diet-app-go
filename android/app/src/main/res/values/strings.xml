@@ -13,4 +13,5 @@
     <string name="switch_title">DietApp</string>
     <string name="switch_cloud">Switch to DietApp Cloud</string>
     <string name="switch_server">Change server URL</string>
+    <string name="cloud_no_browser">No browser found — opening in the app. Google sign-in is unavailable.</string>
 </resources>

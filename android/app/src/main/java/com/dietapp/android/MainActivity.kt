@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.ViewGroup
+import android.widget.Toast
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebSettings
@@ -103,7 +104,17 @@ class MainActivity : AppCompatActivity() {
                 .build()
                 .launchUrl(this, uri)
         } catch (e: ActivityNotFoundException) {
-            startActivity(Intent(Intent.ACTION_VIEW, uri))
+            try {
+                startActivity(Intent(Intent.ACTION_VIEW, uri))
+            } catch (e2: ActivityNotFoundException) {
+                // No browser on the device: fall back to the WebView. Google OAuth
+                // will not work there, but email/password and the rest of the app do.
+                setContentView(R.layout.activity_main)
+                webView = findViewById(R.id.webview)
+                configureWebView()
+                webView.loadUrl(CLOUD_URL)
+                Toast.makeText(this, getString(R.string.cloud_no_browser), Toast.LENGTH_LONG).show()
+            }
         }
     }
 
@@ -126,7 +137,10 @@ class MainActivity : AppCompatActivity() {
                             prefs.edit().putString(KEY_MODE, MODE_CLOUD).apply()
                             showCloudScreen()
                         }
-                        1 -> promptForServerUrl()
+                        1 -> {
+                            prefs.edit().putString(KEY_MODE, MODE_SERVER).apply()
+                            promptForServerUrl()
+                        }
                     }
                 }
                 .show()
