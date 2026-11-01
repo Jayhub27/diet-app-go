@@ -22,12 +22,12 @@ import androidx.core.content.FileProvider
 import java.io.File
 
 /**
- * DietApp Android client.
+ * DietApp Lite Android client.
  *
- * The main DietApp app is a thin WebView wrapper around a self-hosted DietApp
- * Lite server, or it opens the hosted DietApp Cloud app. The server URL
- * is entered on first launch and stored in SharedPreferences. File uploads
- * (including camera capture on the /scan page) are bridged through
+ * DietApp Lite is a thin WebView wrapper around a self-hosted DietApp server,
+ * or it opens the hosted DietApp Cloud app. The server URL is entered on first
+ * launch and stored in SharedPreferences. File uploads (including camera
+ * capture on the /scan page) are bridged through
  * [WebChromeClient.onShowFileChooser].
  */
 class MainActivity : AppCompatActivity() {
@@ -229,8 +229,8 @@ class MainActivity : AppCompatActivity() {
         container.addView(input, lp)
 
         AlertDialog.Builder(this)
-            .setTitle("Connect to DietApp Lite")
-            .setMessage("Enter the URL of the machine running DietApp Lite (e.g. http://192.168.1.100:8080). It must be reachable from this device.")
+            .setTitle("Connect to DietApp")
+            .setMessage("Enter the URL of the machine running DietApp (e.g. http://192.168.1.100:8080). It must be reachable from this device.")
             .setView(container)
             .setCancelable(false)
             .setPositiveButton("Connect") { _, _ ->
