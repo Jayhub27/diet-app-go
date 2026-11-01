@@ -15,7 +15,7 @@ ask otherwise.
 ## Scope
 
 - https://diet-app-go.vercel.app (marketing site and downloads)
-- DietApp (the Go server and its static UI: `cmd/server`, `internal`,
+- DietApp Lite (the Go server and its static UI: `cmd/server`, `internal`,
   `static`)
 - The DietApp Lite Android client (`android/`)
 

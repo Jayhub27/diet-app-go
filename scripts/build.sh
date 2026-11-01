@@ -8,7 +8,7 @@ BINARY_NAME="dietapp"
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
-echo "Building DietApp v${VERSION}..."
+echo "Building DietApp Lite v${VERSION}..."
 
 build() {
     local goos=$1

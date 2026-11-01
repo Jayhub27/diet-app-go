@@ -34,7 +34,7 @@ var (
 )
 
 const (
-	offUserAgent = "DietApp/1.0 (+https://github.com/Jayhub27/Diet-App)"
+	offUserAgent = "DietApp-Lite/1.0 (+https://github.com/Jayhub27/Diet-App)"
 	offTimeout   = 8 * time.Second
 )
 
