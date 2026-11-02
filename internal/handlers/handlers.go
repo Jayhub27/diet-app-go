@@ -58,6 +58,9 @@ func (h *Handlers) Register(e *echo.Echo) {
 	e.GET("/chat", h.Chat)
 	e.POST("/chat", h.ChatSend)         // HTMX form post
 	e.GET("/chat/stream", h.ChatStream) // SSE token stream
+	e.POST("/chat/new", h.ChatNew)
+	e.POST("/chat/delete-all", h.ChatDeleteAll)
+	e.POST("/chat/:id/delete", h.ChatDelete)
 	e.GET("/scan", h.ScanPage)
 	e.POST("/scan", h.ScanIngredients) // multipart image upload
 	e.POST("/scan/list", h.ScanList)   // pasted ingredient list, no AI
@@ -65,6 +68,8 @@ func (h *Handlers) Register(e *echo.Echo) {
 	e.POST("/pantry", h.PantryAdd)
 	e.DELETE("/pantry/:id", h.PantryDelete)
 	e.GET("/library", h.Library)
+	e.GET("/library/import", h.RecipeImportPage)
+	e.POST("/library/import", h.RecipeImport)
 	e.GET("/library/:id", h.RecipeDetail)
 	e.DELETE("/library/:id", h.RecipeDelete)
 	e.GET("/profile", h.Profile)
@@ -116,6 +121,8 @@ func titleFor(name string) string {
 		return "Pantry"
 	case "library":
 		return "Library"
+	case "import":
+		return "Import recipe"
 	case "profile":
 		return "Profile"
 	case "login":
@@ -274,15 +281,128 @@ type chatMessage struct {
 func (h *Handlers) Chat(c echo.Context) error {
 	u := auth.CurrentUser(c)
 	ctx := c.Request().Context()
-	convID, msgs, err := h.loadOrCreateConversation(ctx, u.ID)
+	convID, msgs, err := h.resolveConversation(ctx, u.ID, c.QueryParam("c"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+	conversations, err := h.listConversations(ctx, u.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	currentTitle := "This chat"
+	for _, conv := range conversations {
+		if conv.ID == convID {
+			currentTitle = conv.Title
+			break
+		}
+	}
 	c.Response().Header().Set("X-Conversation-Id", convID)
 	return h.page(c, "chat", map[string]any{
-		"Messages": msgs,
-		"ConvID":   convID,
+		"Messages":      msgs,
+		"ConvID":        convID,
+		"CurrentTitle":  currentTitle,
+		"Conversations": conversations,
 	})
+}
+
+type conversationRow struct {
+	ID        string
+	Title     string
+	UpdatedAt string
+}
+
+// conversationTitle turns the first user message into a short label.
+func conversationTitle(text string) string {
+	t := strings.Join(strings.Fields(text), " ")
+	if t == "" {
+		return "New chat"
+	}
+	runes := []rune(t)
+	if len(runes) > 60 {
+		return string(runes[:60]) + "…"
+	}
+	return t
+}
+
+// maybeTitleConversation names a conversation after its first user message.
+// It never overwrites a title the user (or a later feature) already set.
+func (h *Handlers) maybeTitleConversation(ctx context.Context, convID, userID, text string) {
+	title := conversationTitle(text)
+	if title == "New chat" {
+		return
+	}
+	_, _ = h.DB.ExecContext(ctx,
+		`update conversations set title = ?, updated_at = datetime('now')
+		 where id = ? and user_id = ? and (title = '' or title = 'New chat')`,
+		title, convID, userID)
+}
+
+// listConversations returns the recent chats for the switcher. Old rows that
+// still have the placeholder title are labelled from their first message so
+// existing users see something meaningful without a migration.
+func (h *Handlers) listConversations(ctx context.Context, userID string) ([]conversationRow, error) {
+	rows, err := h.DB.QueryContext(ctx,
+		`select c.id,
+		        case when trim(c.title) in ('', 'New chat') then
+		          coalesce((select substr(trim(m.content), 1, 60)
+		                    from messages m
+		                    where m.conversation_id = c.id and m.role = 'user'
+		                    order by m.created_at asc limit 1), 'New chat')
+		        else c.title end,
+		        c.updated_at
+		 from conversations c
+		 where c.user_id = ?
+		 order by c.updated_at desc
+		 limit 30`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []conversationRow
+	for rows.Next() {
+		var c conversationRow
+		if err := rows.Scan(&c.ID, &c.Title, &c.UpdatedAt); err != nil {
+			return nil, err
+		}
+		c.Title = conversationTitle(c.Title)
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
+func (h *Handlers) loadConversationMessages(ctx context.Context, convID string) ([]chatMessage, error) {
+	rows, err := h.DB.QueryContext(ctx,
+		`select id, role, content, created_at from messages where conversation_id = ? order by created_at asc`, convID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []chatMessage
+	for rows.Next() {
+		var m chatMessage
+		if err := rows.Scan(&m.ID, &m.Role, &m.Content, &m.CreatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, m)
+	}
+	return out, rows.Err()
+}
+
+func (h *Handlers) ownsConversation(ctx context.Context, userID, convID string) bool {
+	var exists int
+	err := h.DB.QueryRowContext(ctx,
+		`select count(*) from conversations where id = ? and user_id = ?`, convID, userID).Scan(&exists)
+	return err == nil && exists > 0
+}
+
+// resolveConversation honours ?c=<id> when it belongs to the user, otherwise
+// falls back to the most recent chat or a fresh one.
+func (h *Handlers) resolveConversation(ctx context.Context, userID, requested string) (string, []chatMessage, error) {
+	if requested != "" && h.ownsConversation(ctx, userID, requested) {
+		msgs, err := h.loadConversationMessages(ctx, requested)
+		return requested, msgs, err
+	}
+	return h.loadOrCreateConversation(ctx, userID)
 }
 
 func (h *Handlers) loadOrCreateConversation(ctx context.Context, userID string) (string, []chatMessage, error) {
@@ -301,21 +421,52 @@ func (h *Handlers) loadOrCreateConversation(ctx context.Context, userID string) 
 	if err != nil {
 		return "", nil, err
 	}
-	rows, err := h.DB.QueryContext(ctx,
-		`select id, role, content, created_at from messages where conversation_id = ? order by created_at asc`, convID)
+	msgs, err := h.loadConversationMessages(ctx, convID)
+	return convID, msgs, err
+}
+
+// ChatNew starts a fresh conversation and opens it.
+func (h *Handlers) ChatNew(c echo.Context) error {
+	u := auth.CurrentUser(c)
+	convID := uuid.NewString()
+	_, err := h.DB.ExecContext(c.Request().Context(),
+		`insert into conversations (id, user_id, title) values (?, ?, 'New chat')`, convID, u.ID)
 	if err != nil {
-		return "", nil, err
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	defer rows.Close()
-	var out []chatMessage
-	for rows.Next() {
-		var m chatMessage
-		if err := rows.Scan(&m.ID, &m.Role, &m.Content, &m.CreatedAt); err != nil {
-			return "", nil, err
-		}
-		out = append(out, m)
+	return c.Redirect(http.StatusSeeOther, "/chat?c="+convID)
+}
+
+// ChatDelete removes one conversation and its messages.
+func (h *Handlers) ChatDelete(c echo.Context) error {
+	u := auth.CurrentUser(c)
+	ctx := c.Request().Context()
+	id := c.Param("id")
+	if _, err := h.DB.ExecContext(ctx,
+		`delete from messages where conversation_id = ? and user_id = ?`, id, u.ID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	return convID, out, nil
+	if _, err := h.DB.ExecContext(ctx,
+		`delete from conversations where id = ? and user_id = ?`, id, u.ID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.Redirect(http.StatusSeeOther, "/chat")
+}
+
+// ChatDeleteAll clears the user's chat history. The next /chat load creates a
+// fresh empty conversation.
+func (h *Handlers) ChatDeleteAll(c echo.Context) error {
+	u := auth.CurrentUser(c)
+	ctx := c.Request().Context()
+	if _, err := h.DB.ExecContext(ctx,
+		`delete from messages where user_id = ?`, u.ID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	if _, err := h.DB.ExecContext(ctx,
+		`delete from conversations where user_id = ?`, u.ID); err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.Redirect(http.StatusSeeOther, "/chat")
 }
 
 type chatContext struct {
@@ -436,7 +587,7 @@ func (h *Handlers) ChatSend(c echo.Context) error {
 	}
 
 	ctx := c.Request().Context()
-	convID, _, err := h.loadOrCreateConversation(ctx, u.ID)
+	convID, _, err := h.resolveConversation(ctx, u.ID, c.FormValue("conversation_id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -453,6 +604,7 @@ func (h *Handlers) ChatSend(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+	h.maybeTitleConversation(ctx, convID, u.ID, userText)
 
 	cc, err := h.loadChatContext(ctx, u.ID)
 	if err != nil {
@@ -487,6 +639,7 @@ func (h *Handlers) ChatSend(c echo.Context) error {
 		tools.GenerateRecipe(),
 		tools.SearchIngredients(),
 		tools.SearchLocations(),
+		tools.SearchWeb(),
 		tools.FindProducts(rs, bl),
 		tools.LookupProductByBarcode(rs, bl),
 		tools.ApplyRestrictions(rs),
@@ -602,11 +755,16 @@ func (h *Handlers) ChatStream(c echo.Context) error {
 	// Image attachments aren't supported over SSE (multipart + EventSource
 	// don't mix); fall back to the non-streaming vision path.
 	if c.QueryParam("hasImages") == "1" {
-		return h.chatStreamFallback(c, u, userText)
+		ctx := c.Request().Context()
+		convID, _, err := h.resolveConversation(ctx, u.ID, c.QueryParam("conversation_id"))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+		return h.chatStreamFallback(c, u, userText, convID)
 	}
 
 	ctx := c.Request().Context()
-	convID, _, err := h.loadOrCreateConversation(ctx, u.ID)
+	convID, _, err := h.resolveConversation(ctx, u.ID, c.QueryParam("conversation_id"))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -618,6 +776,7 @@ func (h *Handlers) ChatStream(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+	h.maybeTitleConversation(ctx, convID, u.ID, userText)
 
 	cc, err := h.loadChatContext(ctx, u.ID)
 	if err != nil {
@@ -643,6 +802,7 @@ func (h *Handlers) ChatStream(c echo.Context) error {
 		tools.GenerateRecipe(),
 		tools.SearchIngredients(),
 		tools.SearchLocations(),
+		tools.SearchWeb(),
 		tools.FindProducts(rs, bl),
 		tools.LookupProductByBarcode(rs, bl),
 		tools.ApplyRestrictions(rs),
@@ -735,15 +895,12 @@ func (h *Handlers) ChatStream(c echo.Context) error {
 
 // chatStreamFallback handles image attachments (vision path) which can't stream
 // over EventSource, by returning a single HTML blob like ChatSend does.
-func (h *Handlers) chatStreamFallback(c echo.Context, u *auth.User, userText string) error {
+func (h *Handlers) chatStreamFallback(c echo.Context, u *auth.User, userText, convID string) error {
 	ctx := c.Request().Context()
-	convID, _, err := h.loadOrCreateConversation(ctx, u.ID)
-	if err != nil {
-		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
-	}
 	h.DB.ExecContext(ctx,
 		`insert into messages (id, conversation_id, user_id, role, content) values (?, ?, ?, 'user', ?)`,
 		uuid.NewString(), convID, u.ID, userText)
+	h.maybeTitleConversation(ctx, convID, u.ID, userText)
 	pantry, _ := h.loadPantry(ctx, u.ID)
 	restrictions, _ := h.loadRestrictions(ctx, u.ID)
 	blacklist, _ := h.loadBlacklist(ctx, u.ID)

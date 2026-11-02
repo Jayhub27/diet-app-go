@@ -24,7 +24,7 @@ create index if not exists sessions_user_idx on sessions(user_id);
 create table if not exists user_settings (
   user_id text primary key references users(id) on delete cascade,
   source text not null default 'openrouter',
-  model_id text not null default 'meta-llama/llama-3.3-70b-instruct:free',
+  model_id text not null default 'nvidia/nemotron-3.5-super-vl:free',
   base_url text,
   api_key text,
   updated_at text not null default (datetime('now'))

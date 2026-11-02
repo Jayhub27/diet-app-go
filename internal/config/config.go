@@ -45,7 +45,7 @@ func Load() *Config {
 		SessionSecret:     secret,
 		DatabasePath:      getenv("DATABASE_PATH", "./diet-app.db"),
 		DefaultAISource:   getenv("DEFAULT_AI_SOURCE", "openrouter"),
-		DefaultAIModel:    getenv("DEFAULT_AI_MODEL", "meta-llama/llama-3.3-70b-instruct:free"),
+		DefaultAIModel:    getenv("DEFAULT_AI_MODEL", "nvidia/nemotron-3.5-super-vl:free"),
 		OpenAIKey:         os.Getenv("OPENAI_API_KEY"),
 		OpenRouterKey:     os.Getenv("OPENROUTER_API_KEY"),
 		OpenRouterAppURL:  os.Getenv("OPENROUTER_APP_URL"),

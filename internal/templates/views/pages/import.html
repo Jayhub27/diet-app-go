@@ -1,0 +1,27 @@
+{{define "body"}}
+<section>
+  <p class="list-item__meta"><a href="/library">← Back to library</a></p>
+  <h1>Import a recipe</h1>
+  <p class="list-item__meta">
+    Paste a link to a recipe page. We read the recipe data the site publishes
+    for search engines — no AI call and no account needed.
+  </p>
+
+  {{if .Error}}
+  <div class="list-item list-item--empty" style="border-color: var(--destructive); color: var(--destructive); margin-top: 1rem">
+    {{.Error}}
+  </div>
+  {{end}}
+
+  <form method="post" action="/library/import" class="inline-form" style="margin-top: 1rem">
+    <input type="url" name="url" value="{{.URL}}" placeholder="https://example.com/best-chili" required
+      aria-label="Recipe URL">
+    <button class="btn-primary" type="submit">Import recipe</button>
+  </form>
+
+  <p class="list-item__meta" style="margin-top: 0.75rem">
+    Works on sites that publish structured recipe data (most recipe sites).
+    Pages behind a login or paywall won't import.
+  </p>
+</section>
+{{end}}

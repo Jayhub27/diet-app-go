@@ -1,6 +1,9 @@
 {{define "body"}}
 <section>
   <h1>Recipe library</h1>
+  <p class="list-item__actions" style="margin-bottom: 1rem">
+    <a class="btn-primary" href="/library/import">Import from URL</a>
+  </p>
   {{if .Recipes}}
     <ul class="list">
       {{range .Recipes}}

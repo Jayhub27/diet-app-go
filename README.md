@@ -10,9 +10,10 @@ restrictions. One Go binary, SQLite, HTMX, and an OpenAI-compatible agent
 ## Goals
 
 - One binary, one SQLite file, zero JS build step.
-- Same features as the MVP slice: chat, pantry, library, profile (restrictions,
-  blacklist, AI settings), email+password auth (with anonymous fallback).
-- Streaming chat is a follow-up; MVP is non-streaming (full reply at the end).
+- Same core slice as the web app: streaming chat, pantry, recipe library, profile
+  (restrictions, blacklist, AI settings), product/barcode checks, recipe import
+  from a URL, chat history + delete, web search (Exa/Parallel), email+password
+  auth (with anonymous fallback).
 
 ## Layout
 
@@ -85,17 +86,15 @@ Each user can override `source` and `model_id` on `/profile`.
 
 These were left out so the slice is small. Add them in follow-ups:
 
-- Streaming chat (SSE). The agent runs a non-streaming `Chat` request; the UI
-  shows the full reply when it arrives. Switching to SSE is a single handler
-  change.
 - Anthropic provider.
-- OpenRouter free-model fallback chain.
+- OpenRouter free-model fallback chain (the app now defaults to
+  `nvidia/nemotron-3.5-super-vl:free`).
 - Stripe tier gating (subscription page, checkout, portal, webhook).
-- Meal plans (`/plan`).
-- Grocery lists (`/groceries`).
+- Meal plans (`/plan`) and grocery lists (`/groceries`).
 - Onboarding flow.
 - Server-side rate limiting per IP for anonymous users (current limiter keys
   on user id only).
+- Credit purchase / subscription management (Stripe).
 - Image generation / caching, etc.
 
 ## Migration from the old Next.js app

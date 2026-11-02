@@ -89,6 +89,16 @@ type gramsInput struct {
 	Grams float64 `json:"grams"`
 }
 
+// EstimateIngredientsNutrition is the exported wrapper used by the web
+// importer and handlers; the internal gramsInput type stays unexported.
+func EstimateIngredientsNutrition(ingredients []IngredientInput, servings int) map[string]any {
+	grams := make([]gramsInput, len(ingredients))
+	for i, ing := range ingredients {
+		grams[i] = gramsInput{Name: ing.Name, Grams: IngredientToGrams(ing.Amount, ing.Unit)}
+	}
+	return EstimateNutrition(grams, servings)
+}
+
 // EstimateNutrition computes per-serving and total macros for a set of
 // ingredients expressed in grams.
 func EstimateNutrition(ingredients []gramsInput, servings int) map[string]any {

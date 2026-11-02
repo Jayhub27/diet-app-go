@@ -1,6 +1,35 @@
 {{define "body"}}
 <section class="chat-section">
-  <h1>Chat with DietApp Lite</h1>
+  <div class="chat-toolbar">
+    <h1>Chat with DietApp Lite</h1>
+    <div class="chat-toolbar__actions">
+      <form method="post" action="/chat/new">
+        <button class="btn-ghost" type="submit">+ New chat</button>
+      </form>
+      <details class="chat-history">
+        <summary class="btn-ghost">Chats ({{len .Conversations}})</summary>
+        <div class="chat-history__panel">
+          {{if .Conversations}}
+            <ul class="list">
+              {{range .Conversations}}
+                <li class="list-item chat-history__row{{if eq .ID $.ConvID}} is-active{{end}}">
+                  <a class="chat-history__title" href="/chat?c={{.ID}}">{{.Title}}</a>
+                  <button type="button" class="btn-ghost chat-history__delete"
+                    data-delete-chat="{{.ID}}" data-delete-title="{{.Title}}">Delete</button>
+                </li>
+              {{end}}
+            </ul>
+            <button type="button" class="btn btn-danger chat-history__clear"
+              data-delete-all="{{len .Conversations}}">Delete all chats</button>
+          {{else}}
+            <p class="list-item__meta">No chats yet.</p>
+          {{end}}
+        </div>
+      </details>
+      <button type="button" class="btn-ghost chat-history__delete"
+        data-delete-chat="{{.ConvID}}" data-delete-title="{{.CurrentTitle}}">Delete</button>
+    </div>
+  </div>
 
   <div id="chat-log" class="chat-log" hx-on::after-swap="window.__scrollChatBottom()">
     {{if .Messages}}
@@ -40,6 +69,7 @@
     enctype="multipart/form-data"
     onsubmit="return window.__sendChat(event)"
   >
+    <input type="hidden" id="conversation-id" name="conversation_id" value="{{.ConvID}}">
     <label class="chat-attach" title="Attach images (vision models only)">
       <span aria-hidden="true">📎</span>
       <input
@@ -68,6 +98,18 @@
       <span aria-hidden="true">↑</span>
     </button>
   </form>
+
+  <dialog id="chat-delete-dialog" class="modal">
+    <form method="post" id="chat-delete-form" class="modal__card">
+      <div class="modal__icon" aria-hidden="true">🗑️</div>
+      <h2 class="modal__title" id="chat-delete-title">Delete chat?</h2>
+      <p class="modal__body" id="chat-delete-body"></p>
+      <div class="modal__actions">
+        <button type="button" class="btn-ghost" id="chat-delete-cancel">Cancel</button>
+        <button type="submit" class="btn btn-danger">Delete</button>
+      </div>
+    </form>
+  </dialog>
 </section>
 <script>
   (function () {
@@ -133,6 +175,7 @@
       const sendBtn = document.getElementById('chat-send');
       const text = input.value.trim();
       const images = document.getElementById('chat-images');
+      const convId = (document.getElementById('conversation-id') || {}).value || '';
       if (!text) return false;
 
       const hasImages = images && images.files && images.files.length > 0;
@@ -148,6 +191,7 @@
         // normal HTMX-style POST and swap the streaming bubble with the reply.
         const fd = new FormData();
         fd.append('message', text);
+        if (convId) fd.append('conversation_id', convId);
         for (const f of images.files) fd.append('images', f);
         images.value = '';
         document.getElementById('chat-attach-count').textContent = '';
@@ -168,7 +212,8 @@
         return false;
       }
 
-      const url = '/chat/stream?message=' + encodeURIComponent(text);
+      const url = '/chat/stream?message=' + encodeURIComponent(text) +
+        (convId ? '&conversation_id=' + encodeURIComponent(convId) : '');
       const es = new EventSource(url);
       let acc = '';
       es.addEventListener('token', function (e) {
@@ -218,6 +263,38 @@
       });
       return false;
     };
+
+    // Themed delete confirmation for chat history.
+    (function () {
+      const dialog = document.getElementById('chat-delete-dialog');
+      const form = document.getElementById('chat-delete-form');
+      const titleEl = document.getElementById('chat-delete-title');
+      const bodyEl = document.getElementById('chat-delete-body');
+      const cancel = document.getElementById('chat-delete-cancel');
+      if (!dialog || !form || !titleEl || !bodyEl) return;
+      function open(action, title, body) {
+        form.action = action;
+        titleEl.textContent = title;
+        bodyEl.textContent = body;
+        if (!dialog.open) dialog.showModal();
+      }
+      cancel.addEventListener('click', function () { dialog.close(); });
+      document.querySelectorAll('[data-delete-chat]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const id = btn.getAttribute('data-delete-chat');
+          const title = btn.getAttribute('data-delete-title') || 'This chat';
+          open('/chat/' + encodeURIComponent(id) + '/delete', 'Delete chat?',
+            '"' + title + '" and its messages will be removed. This can\'t be undone.');
+        });
+      });
+      const all = document.querySelector('[data-delete-all]');
+      if (all) all.addEventListener('click', function () {
+        const count = all.getAttribute('data-delete-all') || '0';
+        open('/chat/delete-all', 'Delete all chats?',
+          'All ' + count + ' chat' + (count === '1' ? '' : 's') +
+          ' and their messages will be removed. This can\'t be undone.');
+      });
+    })();
 
     window.__scrollChatBottom();
     const ta = document.getElementById('chat-input');
