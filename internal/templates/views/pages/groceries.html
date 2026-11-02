@@ -1,0 +1,43 @@
+{{define "body"}}
+<section>
+  <h1>Groceries</h1>
+
+  <form method="post" action="/groceries"
+        hx-post="/groceries" hx-target="#grocery-panel" hx-swap="innerHTML"
+        hx-on::after-request="if(event.detail.successful) this.reset()"
+        class="inline-form" id="grocery-add-form">
+    <input name="name" required placeholder="e.g. oat milk">
+    <input name="amount" type="number" step="0.1" min="0" placeholder="amount" style="max-width:7rem">
+    <input name="unit" placeholder="carton" style="max-width:7rem">
+    <button class="btn-primary" type="submit">Add</button>
+  </form>
+
+  <div id="grocery-panel">
+    {{template "grocery_list" .}}
+  </div>
+
+  <dialog id="grocery-clear-dialog" class="modal">
+    <form method="post" action="/groceries/clear" id="grocery-clear-form"
+          hx-post="/groceries/clear" hx-target="#grocery-panel" hx-swap="innerHTML"
+          class="modal__card">
+      <div class="modal__icon" aria-hidden="true">🗑️</div>
+      <h2 class="modal__title">Clear grocery list?</h2>
+      <p class="modal__body">Every item on this week's list will be removed. This can't be undone.</p>
+      <div class="modal__actions">
+        <button type="button" class="btn-ghost" id="grocery-clear-cancel">Cancel</button>
+        <button type="submit" class="btn btn-danger">Clear list</button>
+      </div>
+    </form>
+  </dialog>
+</section>
+<script>
+  (function () {
+    const dialog = document.getElementById('grocery-clear-dialog');
+    const form = document.getElementById('grocery-clear-form');
+    const cancel = document.getElementById('grocery-clear-cancel');
+    if (!dialog || !form || !cancel) return;
+    cancel.addEventListener('click', function () { dialog.close(); });
+    form.addEventListener('submit', function () { dialog.close(); });
+  })();
+</script>
+{{end}}

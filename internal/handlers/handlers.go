@@ -67,12 +67,19 @@ func (h *Handlers) Register(e *echo.Echo) {
 	e.GET("/pantry", h.Pantry)
 	e.POST("/pantry", h.PantryAdd)
 	e.DELETE("/pantry/:id", h.PantryDelete)
+	e.GET("/groceries", h.Groceries)
+	e.POST("/groceries", h.GroceryAdd)
+	e.POST("/groceries/toggle", h.GroceryToggle)
+	e.POST("/groceries/remove", h.GroceryRemove)
+	e.POST("/groceries/clear", h.GroceryClear)
+	e.POST("/groceries/clear-checked", h.GroceryClearChecked)
 	e.GET("/library", h.Library)
 	e.GET("/library/import", h.RecipeImportPage)
 	e.POST("/library/import", h.RecipeImport)
 	e.GET("/library/:id", h.RecipeDetail)
 	e.DELETE("/library/:id", h.RecipeDelete)
 	e.GET("/profile", h.Profile)
+	e.POST("/profile/calorie-target", h.CalorieTargetSave)
 	e.POST("/restrictions", h.RestrictionAdd)
 	e.DELETE("/restrictions/:id", h.RestrictionDelete)
 	e.POST("/blacklist", h.BlacklistAdd)
@@ -119,6 +126,8 @@ func titleFor(name string) string {
 		return "Scan"
 	case "pantry":
 		return "Pantry"
+	case "groceries":
+		return "Groceries"
 	case "library":
 		return "Library"
 	case "import":
@@ -470,10 +479,11 @@ func (h *Handlers) ChatDeleteAll(c echo.Context) error {
 }
 
 type chatContext struct {
-	settings     settingsRow
-	pantry       []pantryRow
-	restrictions []restrictionRow
-	blacklist    []blacklistRow
+	settings      settingsRow
+	pantry        []pantryRow
+	restrictions  []restrictionRow
+	blacklist     []blacklistRow
+	calorieTarget int
 }
 
 func (h *Handlers) loadChatContext(ctx context.Context, userID string) (*chatContext, error) {
@@ -493,7 +503,17 @@ func (h *Handlers) loadChatContext(ctx context.Context, userID string) (*chatCon
 	if err != nil {
 		return nil, err
 	}
-	return &chatContext{settings: settings, pantry: pantry, restrictions: restrictions, blacklist: blacklist}, nil
+	calorieTarget, err := tools.LoadCalorieTarget(ctx, h.DB, userID)
+	if err != nil {
+		return nil, err
+	}
+	return &chatContext{
+		settings:      settings,
+		pantry:        pantry,
+		restrictions:  restrictions,
+		blacklist:     blacklist,
+		calorieTarget: calorieTarget,
+	}, nil
 }
 
 func (h *Handlers) resolveProvider(s settingsRow) (src provider.Source, model, apiKey, baseURL string) {
@@ -614,7 +634,7 @@ func (h *Handlers) ChatSend(c echo.Context) error {
 	src, model, apiKey, baseURL := h.resolveProvider(cc.settings)
 
 	if src == provider.SourceLocal && len(imagePaths) > 0 && h.LocalAI != nil && h.LocalAI.IsVision() {
-		reply, vErr := h.runVisionLocal(ctx, userText, imagePaths, cc.pantry, cc.restrictions, cc.blacklist)
+		reply, vErr := h.runVisionLocal(ctx, userText, imagePaths, cc.pantry, cc.restrictions, cc.blacklist, cc.calorieTarget)
 		if vErr != nil {
 			return h.renderChatBubble(c, persistedUserText, "Sorry — the AI call failed: "+vErr.Error(), nil)
 		}
@@ -648,6 +668,15 @@ func (h *Handlers) ChatSend(c echo.Context) error {
 		tools.ListPantry(h.DB, u.ID),
 		tools.AddToBlacklist(h.DB, u.ID),
 		tools.RemoveFromBlacklist(h.DB, u.ID),
+		tools.SetRestriction(h.DB, u.ID),
+		tools.RemoveRestriction(h.DB, u.ID),
+		tools.SetCalorieTarget(h.DB, u.ID),
+		tools.AddToGroceryList(h.DB, u.ID),
+		tools.RemoveFromGroceryList(h.DB, u.ID),
+		tools.CheckGroceryItem(h.DB, u.ID),
+		tools.ClearGroceryListTool(h.DB, u.ID),
+		tools.ListGroceryList(h.DB, u.ID),
+		tools.NavigateTo(),
 		tools.SaveRecipeToLibrary(h.DB, u.ID),
 		tools.BuildGroceryList(),
 		tools.ValidateIngredientsDeep(client),
@@ -662,7 +691,7 @@ func (h *Handlers) ChatSend(c echo.Context) error {
 
 	// Build system prompt with user context appended.
 	sys := ai.SystemPrompt
-	sys += ai.BuildContextBlock(pantryView, rs, bl)
+	sys += ai.BuildContextBlock(pantryView, rs, bl, cc.calorieTarget)
 
 	provMsgs := make([]provider.Message, 0, len(history)+1)
 	for _, m := range history {
@@ -671,9 +700,15 @@ func (h *Handlers) ChatSend(c echo.Context) error {
 	provMsgs = append(provMsgs, provider.Message{Role: "user", Content: userText})
 
 	agent := &ai.Agent{Client: client, Model: model, Tools: agentTools, MaxSteps: 6}
+	navigatePath := ""
 	res, err := agent.Run(ctx, ai.RunOptions{
 		System:   sys,
 		Messages: provMsgs,
+		OnToolResult: func(name, output string) {
+			if path := navigationPath(name, output); path != "" {
+				navigatePath = path
+			}
+		},
 	})
 	if err != nil {
 		// Persist an error reply so the user sees something.
@@ -697,13 +732,38 @@ func (h *Handlers) ChatSend(c echo.Context) error {
 			"Result": fmt.Sprintf("%d call(s)", count),
 		})
 	}
+	if navigatePath != "" {
+		if isHTMX(c) {
+			c.Response().Header().Set("HX-Redirect", navigatePath)
+		} else {
+			return c.Redirect(http.StatusSeeOther, navigatePath)
+		}
+	}
 	return h.renderChatBubble(c, persistedUserText, reply, toolHits)
+}
+
+// navigationPath extracts a client redirect from a navigate_to tool result.
+func navigationPath(name, output string) string {
+	if name != "navigate_to" {
+		return ""
+	}
+	var res struct {
+		Path     string `json:"path"`
+		Navigate bool   `json:"navigate"`
+	}
+	if err := json.Unmarshal([]byte(output), &res); err != nil {
+		return ""
+	}
+	if !res.Navigate || res.Path == "" {
+		return ""
+	}
+	return res.Path
 }
 
 // runVisionLocal calls the local manager's vision path with a single
 // user-message + system context. No tool loop.
 func (h *Handlers) runVisionLocal(ctx context.Context, userText string, imagePaths []string,
-	pantry []pantryRow, restrictions []restrictionRow, blacklist []blacklistRow) (string, error) {
+	pantry []pantryRow, restrictions []restrictionRow, blacklist []blacklistRow, calorieTarget int) (string, error) {
 
 	rs := make([]tools.Restriction, 0, len(restrictions))
 	for _, r := range restrictions {
@@ -717,7 +777,7 @@ func (h *Handlers) runVisionLocal(ctx context.Context, userText string, imagePat
 	for _, b := range blacklist {
 		bl = append(bl, b.Ingredient)
 	}
-	sys := ai.SystemPrompt + ai.BuildContextBlock(pantryView, rs, bl)
+	sys := ai.SystemPrompt + ai.BuildContextBlock(pantryView, rs, bl, calorieTarget)
 
 	msgs := []provider.Message{
 		{Role: "system", Content: sys},
@@ -811,6 +871,15 @@ func (h *Handlers) ChatStream(c echo.Context) error {
 		tools.ListPantry(h.DB, u.ID),
 		tools.AddToBlacklist(h.DB, u.ID),
 		tools.RemoveFromBlacklist(h.DB, u.ID),
+		tools.SetRestriction(h.DB, u.ID),
+		tools.RemoveRestriction(h.DB, u.ID),
+		tools.SetCalorieTarget(h.DB, u.ID),
+		tools.AddToGroceryList(h.DB, u.ID),
+		tools.RemoveFromGroceryList(h.DB, u.ID),
+		tools.CheckGroceryItem(h.DB, u.ID),
+		tools.ClearGroceryListTool(h.DB, u.ID),
+		tools.ListGroceryList(h.DB, u.ID),
+		tools.NavigateTo(),
 		tools.SaveRecipeToLibrary(h.DB, u.ID),
 		tools.BuildGroceryList(),
 		tools.ValidateIngredientsDeep(client),
@@ -821,7 +890,7 @@ func (h *Handlers) ChatStream(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	sys := ai.SystemPrompt + ai.BuildContextBlock(pantryView, rs, bl)
+	sys := ai.SystemPrompt + ai.BuildContextBlock(pantryView, rs, bl, cc.calorieTarget)
 	provMsgs := make([]provider.Message, 0, len(history)+1)
 	for _, m := range history {
 		provMsgs = append(provMsgs, provider.Message{Role: m.Role, Content: m.Content})
@@ -850,6 +919,7 @@ func (h *Handlers) ChatStream(c echo.Context) error {
 	agent := &ai.Agent{Client: client, Model: model, Tools: agentTools, MaxSteps: 6}
 	var fullReply strings.Builder
 	var toolHits []map[string]string
+	navigatePath := ""
 
 	res, runErr := agent.Run(ctx, ai.RunOptions{
 		System:   sys,
@@ -860,6 +930,11 @@ func (h *Handlers) ChatStream(c echo.Context) error {
 		},
 		OnToolCall: func(name, args string) {
 			send("tool", name)
+		},
+		OnToolResult: func(name, output string) {
+			if path := navigationPath(name, output); path != "" {
+				navigatePath = path
+			}
 		},
 	})
 
@@ -885,10 +960,14 @@ func (h *Handlers) ChatStream(c echo.Context) error {
 		toolHits = append(toolHits, map[string]string{"Name": name, "Result": "called"})
 	}
 	// Send rendered tool hits + final reply as the closing event.
-	doneJSON, _ := json.Marshal(map[string]any{
+	donePayload := map[string]any{
 		"tools": toolHits,
 		"html":  string(templates.FormatMessage(reply)),
-	})
+	}
+	if navigatePath != "" {
+		donePayload["navigate"] = navigatePath
+	}
+	doneJSON, _ := json.Marshal(donePayload)
 	send("done", string(doneJSON))
 	return nil
 }
@@ -904,8 +983,9 @@ func (h *Handlers) chatStreamFallback(c echo.Context, u *auth.User, userText, co
 	pantry, _ := h.loadPantry(ctx, u.ID)
 	restrictions, _ := h.loadRestrictions(ctx, u.ID)
 	blacklist, _ := h.loadBlacklist(ctx, u.ID)
+	calorieTarget, _ := tools.LoadCalorieTarget(ctx, h.DB, u.ID)
 	if h.LocalAI != nil && h.LocalAI.IsVision() {
-		reply, vErr := h.runVisionLocal(ctx, userText, nil, pantry, restrictions, blacklist)
+		reply, vErr := h.runVisionLocal(ctx, userText, nil, pantry, restrictions, blacklist, calorieTarget)
 		if vErr != nil {
 			return h.renderChatBubble(c, userText, "Sorry — the AI call failed: "+vErr.Error(), nil)
 		}

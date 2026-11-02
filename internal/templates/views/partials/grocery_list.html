@@ -1,0 +1,49 @@
+{{define "grocery_list"}}
+<p class="section-hint">Week of {{.WeekStart}} · {{.Remaining}} to buy · {{.Checked}} bought · {{.Total}} item(s)</p>
+
+<div class="grocery-toolbar">
+  <span class="grocery-toolbar__label">Shopping list</span>
+  <div class="grocery-toolbar__actions">
+    <button type="button" class="btn-ghost"
+      hx-post="/groceries/clear-checked" hx-target="#grocery-panel" hx-swap="innerHTML"
+      {{if eq .Checked 0}}disabled{{end}}>Clear bought</button>
+    <button type="button" class="btn-ghost"
+      onclick="var d=document.getElementById('grocery-clear-dialog'); if(d&&d.showModal){d.showModal()}"
+      {{if eq .Total 0}}disabled{{end}}>Clear list</button>
+  </div>
+</div>
+
+{{if .Groups}}
+  <div class="grocery-groups">
+    {{range .Groups}}
+      <section class="grocery-group">
+        <h2 class="grocery-group__title">{{.Category}} <span class="grocery-group__count">{{len .Items}}</span></h2>
+        <ul class="list">
+          {{range .Items}}
+            <li class="grocery-item{{if .Checked}} is-checked{{end}}">
+              <form method="post" action="/groceries/toggle"
+                    hx-post="/groceries/toggle" hx-target="#grocery-panel" hx-swap="innerHTML">
+                <input type="hidden" name="name" value="{{.Name}}">
+                <input type="hidden" name="checked" value="{{if .Checked}}false{{else}}true{{end}}">
+                <button type="submit" class="grocery-check"
+                  aria-label="{{if .Checked}}Mark {{.Name}} as not bought{{else}}Mark {{.Name}} as bought{{end}}">{{if .Checked}}✓{{else}}○{{end}}</button>
+              </form>
+              <div class="grocery-item__body">
+                <span class="grocery-item__name">{{.Name}}</span>
+                <span class="grocery-item__meta">{{.Amount}} {{.Unit}}{{if .FromRecipes}} · {{range $i, $r := .FromRecipes}}{{if $i}}, {{end}}{{$r}}{{end}}{{end}}</span>
+              </div>
+              <form method="post" action="/groceries/remove"
+                    hx-post="/groceries/remove" hx-target="#grocery-panel" hx-swap="innerHTML">
+                <input type="hidden" name="name" value="{{.Name}}">
+                <button type="submit" class="btn-ghost">remove</button>
+              </form>
+            </li>
+          {{end}}
+        </ul>
+      </section>
+    {{end}}
+  </div>
+{{else}}
+  <p class="list-item list-item--empty">Your grocery list is empty. Add an item above, or ask the AI.</p>
+{{end}}
+{{end}}

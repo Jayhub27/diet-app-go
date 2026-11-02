@@ -3,9 +3,11 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/labstack/echo/v4"
+	"github.com/orionryan/diet-app-go/internal/ai/tools"
 	"github.com/orionryan/diet-app-go/internal/auth"
 )
 
@@ -120,10 +122,15 @@ func (h *Handlers) Profile(c echo.Context) error {
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+	calorieTarget, err := tools.LoadCalorieTarget(c.Request().Context(), h.DB, u.ID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
 	return h.page(c, "profile", map[string]any{
-		"Restrictions": rs,
-		"Blacklist":    bl,
-		"Settings":     settings,
+		"Restrictions":  rs,
+		"Blacklist":     bl,
+		"Settings":      settings,
+		"CalorieTarget": calorieTarget,
 	})
 }
 
@@ -190,6 +197,31 @@ func (h *Handlers) BlacklistDelete(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	return c.NoContent(http.StatusOK)
+}
+
+// CalorieTargetSave sets or clears the daily kcal target. An empty value
+// clears it, so the profile form can remove a target without a second button.
+func (h *Handlers) CalorieTargetSave(c echo.Context) error {
+	u := auth.CurrentUser(c)
+	raw := strings.TrimSpace(c.FormValue("calorie_target"))
+	target := 0
+	if raw != "" {
+		value, err := strconv.Atoi(raw)
+		if err != nil || value < 0 || value > 10000 {
+			return c.String(http.StatusBadRequest, "Calorie target must be between 0 and 10000.")
+		}
+		target = value
+	}
+	_, err := h.DB.ExecContext(c.Request().Context(),
+		`insert into profile_targets (user_id, calorie_target, updated_at)
+		 values (?, ?, datetime('now'))
+		 on conflict (user_id) do update
+		 set calorie_target = excluded.calorie_target, updated_at = datetime('now')`,
+		u.ID, target)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.Redirect(http.StatusSeeOther, "/profile")
 }
 
 func (h *Handlers) SettingsSave(c echo.Context) error {

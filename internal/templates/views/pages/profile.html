@@ -17,6 +17,17 @@
   </div>
   {{end}}
 
+  <h2>Daily calorie target</h2>
+  <form method="post" action="/profile/calorie-target" class="inline-form">
+    <input name="calorie_target" type="number" min="0" max="10000" step="1"
+      value="{{if .CalorieTarget}}{{.CalorieTarget}}{{end}}" placeholder="e.g. 2000">
+    <button type="submit">Save</button>
+  </form>
+  <p class="section-hint">
+    {{if .CalorieTarget}}Current target: {{.CalorieTarget}} kcal/day.{{else}}No target set. Leave blank and save to clear it.{{end}}
+    The AI uses this when planning meals.
+  </p>
+
   <h2>Restrictions</h2>
   <form hx-post="/restrictions" hx-target="#restrictions-list" hx-swap="beforeend" class="inline-form">
     <input name="restriction" required placeholder="e.g. gluten-free">

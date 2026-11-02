@@ -54,6 +54,7 @@
           <button class="chat-chip" type="button" data-suggest="Vegan high-protein dinner under 600 calories">Vegan high-protein dinner under 600 calories</button>
           <button class="chat-chip" type="button" data-suggest="What can I make with chicken and rice?">What can I make with chicken and rice?</button>
           <button class="chat-chip" type="button" data-suggest="Plan a week of low-carb lunches">Plan a week of low-carb lunches</button>
+          <button class="chat-chip" type="button" data-suggest="What's on my grocery list?">What's on my grocery list?</button>
         </div>
       </div>
     {{end}}
@@ -162,10 +163,14 @@
     function readDonePayload(e) {
       try {
         const parsed = JSON.parse(e.data || '{}');
-        if (Array.isArray(parsed)) return { tools: parsed, html: '' };
-        return { tools: parsed.tools || [], html: parsed.html || '' };
+        if (Array.isArray(parsed)) return { tools: parsed, html: '', navigate: '' };
+        return {
+          tools: parsed.tools || [],
+          html: parsed.html || '',
+          navigate: parsed.navigate || ''
+        };
       } catch (_) {
-        return { tools: [], html: '' };
+        return { tools: [], html: '', navigate: '' };
       }
     }
 
@@ -260,6 +265,11 @@
         es.close();
         sendBtn.disabled = false;
         window.__scrollChatBottom();
+        if (payload.navigate) {
+          window.setTimeout(function () {
+            window.location.href = payload.navigate;
+          }, 500);
+        }
       });
       return false;
     };

@@ -34,6 +34,9 @@ type RunOptions struct {
 	// OnToolCall is invoked once per tool execution (for SSE tool-status
 	// cards, logging, etc.). nil = ignore.
 	OnToolCall func(name string, args string)
+	// OnToolResult is invoked after a tool returns, for client directives such
+	// as navigation. nil = ignore.
+	OnToolResult func(name string, output string)
 	// OnToken is called for every assistant content delta in a streaming
 	// response. nil = no streaming (the agent still works without it).
 	// MVP: not used; agent runs non-streaming and returns the full reply.
@@ -46,6 +49,10 @@ type Result struct {
 	Steps   int            // how many LLM calls were made
 	Trace   []Step         // for debugging / UI
 	ToolHit map[string]int // how many times each tool was called
+	// ProfileChanged is set once a restriction/blacklist/calorie tool ran.
+	// Recipe/product tools are blocked for the rest of the run because their
+	// closures still hold the old profile.
+	ProfileChanged bool
 }
 
 type Step struct {
@@ -183,6 +190,9 @@ func executeToolCalls(ctx context.Context, a *Agent, byName map[string]*tools.To
 		if !ok {
 			step.ToolErr = fmt.Sprintf("unknown tool: %s", name)
 			step.ToolOut = step.ToolErr
+		} else if res.ProfileChanged && profileBlockedTools[name] {
+			step.ToolErr = "The profile changed in this run; the new restrictions apply on the next message. Tell the user and stop generating recipes now."
+			step.ToolOut = step.ToolErr
 		} else {
 			if opts.OnToolCall != nil {
 				opts.OnToolCall(name, args)
@@ -193,6 +203,12 @@ func executeToolCalls(ctx context.Context, a *Agent, byName map[string]*tools.To
 				step.ToolOut = err.Error()
 			} else {
 				step.ToolOut = out
+				if opts.OnToolResult != nil {
+					opts.OnToolResult(name, out)
+				}
+			}
+			if profileMutationTools[name] {
+				res.ProfileChanged = true
 			}
 		}
 		res.Trace = append(res.Trace, step)
@@ -204,6 +220,23 @@ func executeToolCalls(ctx context.Context, a *Agent, byName map[string]*tools.To
 		})
 	}
 	return nil
+}
+
+var profileMutationTools = map[string]bool{
+	"set_restriction":       true,
+	"remove_restriction":    true,
+	"add_to_blacklist":      true,
+	"remove_from_blacklist": true,
+	"set_calorie_target":    true,
+}
+
+var profileBlockedTools = map[string]bool{
+	"generate_recipe":           true,
+	"plan_week":                 true,
+	"build_grocery_list":        true,
+	"save_recipe_to_library":    true,
+	"find_products":             true,
+	"lookup_product_by_barcode": true,
 }
 
 func buildSchemas(ts []*tools.Tool) []provider.Tool {
@@ -263,7 +296,28 @@ Pantry tools:
 - remove_from_pantry: when user says "remove X" or "I used up Y"
 - list_pantry: when user asks "what's in my pantry?"
 - save_recipe_to_library: when user says "save this recipe"
-- Do NOT modify dietary profile or restrictions — that's manual on /profile.
+
+Profile tools (you can change saved data):
+- set_restriction / remove_restriction: add, change or remove a diet + severity.
+- add_to_blacklist / remove_from_blacklist: maintain prohibited ingredients.
+- set_calorie_target: set a daily kcal target (0 clears it).
+- Only loosen or remove a restriction/blacklist item when the user explicitly
+  asks; never clear an anaphylaxis restriction without a direct request.
+- After a profile/blacklist/calorie change, stop and confirm. Do not generate a
+  recipe or plan in the same run; the new profile applies on the next message.
+
+Grocery tools:
+- add_to_grocery_list: "add X to my shopping list"
+- remove_from_grocery_list: "take X off the list"
+- clear_grocery_list: only when the user explicitly asks to clear it
+- check_grocery_item: "I bought the apples" / "uncheck the milk"
+- list_grocery_list: when they ask what they still need to buy
+- build_grocery_list: build from planned recipes
+
+Screen control:
+- navigate_to: when the user asks to open a screen or should see a change.
+- You can act on the user's data directly; do it instead of telling them to do
+  it manually, then report exactly what changed.
 
 Blacklist tools:
 - add_to_blacklist: when the user describes allergies, intolerances, or foods
@@ -280,8 +334,11 @@ Product tools:
 
 // BuildContextBlock appends a human-readable context block to the system
 // prompt. Mirrors the TS buildContextBlock helper.
-func BuildContextBlock(pantry []map[string]any, restrictions []tools.Restriction, blacklist []string) string {
+func BuildContextBlock(pantry []map[string]any, restrictions []tools.Restriction, blacklist []string, calorieTarget int) string {
 	var parts []string
+	if calorieTarget > 0 {
+		parts = append(parts, fmt.Sprintf("Daily calorie target: %d kcal", calorieTarget))
+	}
 	if len(pantry) > 0 {
 		lines := make([]string, 0, len(pantry))
 		for _, p := range pantry {

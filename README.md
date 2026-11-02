@@ -10,10 +10,13 @@ restrictions. One Go binary, SQLite, HTMX, and an OpenAI-compatible agent
 ## Goals
 
 - One binary, one SQLite file, zero JS build step.
-- Same core slice as the web app: streaming chat, pantry, recipe library, profile
-  (restrictions, blacklist, AI settings), product/barcode checks, recipe import
-  from a URL, chat history + delete, web search (Exa/Parallel), email+password
-  auth (with anonymous fallback).
+- Same core slice as the web app: streaming chat, pantry, grocery list, recipe
+  library, profile (restrictions, blacklist, calorie target, AI settings),
+  product/barcode checks, recipe import from a URL, chat history + delete, web
+  search (Exa/Parallel), email+password auth (with anonymous fallback).
+- The agent acts on the app instead of only advising: it can add or remove
+  blacklist items and restrictions, set the calorie target, edit the pantry and
+  grocery list, and open the matching screen.
 
 ## Layout
 
@@ -30,7 +33,7 @@ internal/
   ai/agent.go                 # tool-calling loop
   handlers/                   # echo handlers (auth, chat, crud)
   templates/                  # html/template engine
-migrations/0001_init.sql      # schema
+migrations/                   # idempotent SQL schema + action-layer tables
 views/                        # html templates
 static/css/                   # handcrafted CSS (no Tailwind build)
 ```
@@ -55,7 +58,8 @@ go run ./cmd/server
 # → http://localhost:8080
 ```
 
-The first run creates `./diet-app.db` and runs `migrations/0001_init.sql`.
+The first run creates `./diet-app.db` and applies every SQL file in
+`migrations/` in order.
 
 ## Config
 
@@ -90,7 +94,7 @@ These were left out so the slice is small. Add them in follow-ups:
 - OpenRouter free-model fallback chain (the app now defaults to
   `nvidia/nemotron-3.5-super-vl:free`).
 - Stripe tier gating (subscription page, checkout, portal, webhook).
-- Meal plans (`/plan`) and grocery lists (`/groceries`).
+- Meal plans (`/plan`). The grocery list itself is implemented at `/groceries`.
 - Onboarding flow.
 - Server-side rate limiting per IP for anonymous users (current limiter keys
   on user id only).
